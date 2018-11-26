@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies.controllers
+package uk.gov.hmrc.professionalbodies.service
 
-import javax.inject.Singleton
+import javax.inject.Inject
+import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import play.api.mvc._
+import scala.concurrent.{ExecutionContext, Future}
 
-import scala.concurrent.Future
+class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesRepository)(implicit ec : ExecutionContext){
 
-@Singleton()
-class MicroserviceHelloWorld extends BaseController {
-
-	def hello() = Action.async { implicit request =>
-		Future.successful(Ok("Hello world"))
-	}
+  def fetchOrganisations():Future[Seq[String]] ={
+    for {
+      organisations <- repository.findAll()
+    } yield organisations.map(_.name)
+  }
 
 }
