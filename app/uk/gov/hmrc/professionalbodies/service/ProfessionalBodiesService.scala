@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.professionalbodies.service
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesRepository)(implicit ec : ExecutionContext){
 
   def fetchOrganisations():Future[Seq[String]] ={

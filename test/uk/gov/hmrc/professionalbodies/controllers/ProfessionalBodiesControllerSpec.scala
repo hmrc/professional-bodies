@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.professionalbodies.controllers
 
+import akka.stream.Materializer
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
@@ -27,19 +29,20 @@ import play.api.test.FakeRequest
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
 class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
-  val mockService = mock[ProfessionalBodiesService]
+  val mockService: ProfessionalBodiesService = mock[ProfessionalBodiesService]
   val fakeRequest = FakeRequest("GET", "/")
-  val env = Environment.simple()
-  val configuration = Configuration.load(env)
+  val env: Environment = Environment.simple()
+  val configuration: Configuration = Configuration.load(env)
   val messageApi = new DefaultMessagesApi(env, configuration, new DefaultLangs(configuration))
   val controller = new ProfessionalBodiesController(messageApi, mockService)
-  implicit val mat = app.materializer
+  implicit val mat: Materializer = app.materializer
 
   val organisations = Seq("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017",
     "Academic and Research Surgery Society of",
@@ -48,7 +51,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     "Access Consultants National Register of")
 
 
-  def theServiceWillReturnSomeOrganisations () = {
+  def theServiceWillReturnSomeOrganisations (): OngoingStubbing[Future[Seq[String]]] = {
 
     when(mockService.fetchOrganisations()).thenReturn(Future.successful(organisations))
   }
@@ -67,7 +70,5 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       jsonBodyOf(result) shouldBe Json.toJson(organisations)
     }
   }
-
-
 
 }

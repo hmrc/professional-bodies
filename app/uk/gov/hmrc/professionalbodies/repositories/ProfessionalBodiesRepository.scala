@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.professionalbodies.repositories
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -24,6 +24,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.models.Organisation.formatOrgansiation
 
+@Singleton
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
   extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, formatOrgansiation, objectIdFormats) {
 }
