@@ -34,5 +34,14 @@ class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfte
       result shouldBe organisations
     }
   }
+
+  "The respository on first load" should {
+    "add all organisations in the database or override all pre-existing data on the database" in {
+      val result = await(repository.findAll())
+      result shouldBe(repository.organisations)
+
+    }
+
+  }
 }
 
