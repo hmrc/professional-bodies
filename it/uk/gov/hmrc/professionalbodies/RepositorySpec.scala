@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfterAll with MongoSpecSupport {
 
-  val mongoComponenet = new ReactiveMongoComponent {
+  val mongoComponenet: ReactiveMongoComponent = new ReactiveMongoComponent {
     override def mongoConnector: MongoConnector = mongoConnectorForTest
   }
 
@@ -21,9 +21,7 @@ class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfte
     Organisation("Academic and Research Surgery Society of"),
     Organisation("Academic Gaming and Simulation in Education and Training Society for"),
     Organisation("Academic Primary Care Society for"),
-    Organisation("Access Consultants National Register of")
-  )
-
+    Organisation("Access Consultants National Register of"))
 
   override def beforeEach(): Unit = await(repository.drop)
 
@@ -33,8 +31,7 @@ class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfte
     "return All the organisation" in {
       await(repository.bulkInsert(organisations))
       val result = await(repository.findAll())
-      result shouldBe(organisations)
-
+      result shouldBe organisations
     }
   }
 }
