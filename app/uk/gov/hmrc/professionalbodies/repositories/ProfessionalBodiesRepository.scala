@@ -27,4 +27,5 @@ import uk.gov.hmrc.professionalbodies.models.Organisation.formatOrgansiation
 @Singleton
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
   extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, formatOrgansiation, objectIdFormats) {
+
 }
