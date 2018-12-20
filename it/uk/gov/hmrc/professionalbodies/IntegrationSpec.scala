@@ -42,7 +42,7 @@ class IntegrationSpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAft
   }
   def callEndPoint(): Result ={
     route(app, FakeRequest(GET, "/organisations")) match {
-      case Some(resultF) => await(resultF)
+      case Some(result) => await(result)
       case _ => fail()
     }
   }
