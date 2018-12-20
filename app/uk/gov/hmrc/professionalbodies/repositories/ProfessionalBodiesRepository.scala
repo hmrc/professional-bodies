@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.professionalbodies.repositories
 
-import com.fasterxml.jackson.databind.JsonNode
 import javax.inject.{Inject, Singleton}
-import play.libs.Json
+import play.api.libs.json.{JsArray, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.professionalbodies.models.Organisation
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -32,8 +33,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
   extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, Organisation.formatOrgansiation, objectIdFormats) {
   //class should be empty after initial release
-  val sourceOrganisations: JsonNode = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
-  val organisations:Seq[Organisation] = organisations.map(organisation => Organisation(organisation.name))
+  val sourceOrganisations: JsValue = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
+  val organisations: Seq[Organisation] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => Organisation(jsval.toString()))
 
   this.bulkInsert(organisations)
 

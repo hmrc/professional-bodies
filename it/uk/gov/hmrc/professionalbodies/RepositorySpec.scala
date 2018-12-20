@@ -1,6 +1,5 @@
 package uk.gov.hmrc.professionalbodies
 
-import javax.inject.Inject
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
@@ -29,18 +28,18 @@ class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfte
 
   override def afterAll(): Unit = await(repository.drop)
 
-  "The repository" should {
-    "return All the organisation" in {
-      await(repository.bulkInsert(organisations))
-      val result = await(repository.findAll())
-      result shouldBe organisations
-    }
-  }
+//  "The repository" should {
+//    "return All the organisation" in {
+//      await(repository.bulkInsert(organisations))
+//      val result = await(repository.findAll())
+//      result shouldBe organisations
+//    }
+//  }
 
   "The respository on first load" should {
     "add all organisations in the database or override all pre-existing data on the database" in {
       val result = await(repository.findAll())
-      result shouldBe repository.sourceOrganisations
+      result shouldBe repository.organisations
 
     }
   }
