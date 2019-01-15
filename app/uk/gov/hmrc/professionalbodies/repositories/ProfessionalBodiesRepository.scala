@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.professionalbodies.models.Organisation
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -33,9 +31,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
   extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, Organisation.formatOrgansiation, objectIdFormats) {
   //class should be empty after initial release
-  val sourceOrganisations: JsValue = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
-  val organisations: Seq[Organisation] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => Organisation(jsval.toString()))
 
-  this.bulkInsert(organisations)
+  this.drop
+  val sourceOrganisations: JsValue = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
+  val organisations: Seq[String] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => jsval.toString())
+
+  println(organisations)
+  organisations.foreach(organisation => this.insert(Organisation(organisation)))
 
 }
+
+

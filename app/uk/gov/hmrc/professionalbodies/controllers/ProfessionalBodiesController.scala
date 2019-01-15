@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,16 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, service : ProfessionalBodiesService)
                                             (implicit val ec: ExecutionContext)extends BaseController with I18nSupport {
 
-  def getOrganisations = Action.async { implicit request =>
+  def getOrganisations: Action[AnyContent] = Action.async { implicit request =>
 
-    service.fetchOrganisations.map { organisations =>
+    service.fetchOrganisations().map { organisations =>
       Ok(toJson(organisations)).withHeaders(CONTENT_TYPE -> JSON)
     }
   }
