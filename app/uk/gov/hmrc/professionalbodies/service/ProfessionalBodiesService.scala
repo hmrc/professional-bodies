@@ -30,8 +30,8 @@ class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesReposito
       organisations <- repository.findAll()
     } yield organisations.map(_.name)
   }
-  def addOrganisations(organisation: Organisation): Unit ={
-    repository.
-  }
 
+  def addOrganisations(organisation: Organisation): Unit ={
+    repository.insert(organisation)
+  }
 }
