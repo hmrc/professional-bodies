@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfterAll with MongoSpecSupport {
 
+
   val mongoComponenet: ReactiveMongoComponent = new ReactiveMongoComponent {
     override def mongoConnector: MongoConnector = mongoConnectorForTest
   }
@@ -31,17 +32,12 @@ class RepositorySpec extends UnitSpec with BeforeAndAfterEach with BeforeAndAfte
     "return All the organisation" in {
       await(repository.bulkInsert(organisations))
       val result = await(repository.findAll())
+      println(result)
       result shouldBe organisations
-    }
-  }
-
-  "The respository on first load" should {
-    "add all organisations in the database or override all pre-existing data on the database" in {
-      val result = await(repository.findAll())
-      result shouldBe(repository.organisations)
 
     }
-
   }
 }
+
+
 
