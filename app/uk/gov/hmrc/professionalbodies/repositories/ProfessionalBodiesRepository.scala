@@ -34,9 +34,8 @@ class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
 
   this.drop
   val sourceOrganisations: JsValue = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
-  val organisations: Seq[String] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => jsval.toString())
-
-  println(organisations)
+  val organisations: Seq[String] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => jsval.toString().replaceAll("\"",""))
+  
   organisations.foreach(organisation => this.insert(Organisation(organisation)))
 
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.professionalbodies.service
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,6 +29,9 @@ class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesReposito
     for {
       organisations <- repository.findAll()
     } yield organisations.map(_.name)
+  }
+  def addOrganisations(organisation: Organisation): Unit ={
+    repository.
   }
 
 }
