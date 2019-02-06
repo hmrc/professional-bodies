@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 package uk.gov.hmrc.professionalbodies.controllers
 
 import akka.stream.Materializer
-import org.scalatest.Matchers
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
+import org.scalatest.Matchers
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}

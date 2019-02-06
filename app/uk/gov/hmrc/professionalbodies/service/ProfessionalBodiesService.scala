@@ -17,6 +17,7 @@
 package uk.gov.hmrc.professionalbodies.service
 
 import javax.inject.{Inject, Singleton}
+import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
@@ -25,13 +26,16 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesRepository)(implicit ec : ExecutionContext){
 
-  def fetchOrganisations():Future[Seq[String]] ={
-    for {
-      organisations <- repository.findAll()
-    } yield organisations.map(_.name)
+  def fetchOrganisations() :Future[Seq[String]] = {
+    repository.fetchOrganisations()
   }
 
-  def addOrganisations(organisation: Organisation): Unit ={
-    repository.insert(organisation)
+  def addOrganisations(organisation: Organisation): Future[WriteResult] ={
+    repository.addOrganisations(organisation)
   }
+
+  def removeOrganisations(organisationName: String): Future[WriteResult] = {
+    repository.removeOrganisations(organisationName)
+  }
+
 }

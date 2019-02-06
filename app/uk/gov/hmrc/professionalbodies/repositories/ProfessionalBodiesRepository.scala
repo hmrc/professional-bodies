@@ -16,27 +16,57 @@
 
 package uk.gov.hmrc.professionalbodies.repositories
 
-import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsArray, JsValue, Json}
+import javax.inject.{Inject, Named, Singleton}
+import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.{MultiBulkWriteResult, WriteResult}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import uk.gov.hmrc.professionalbodies.models.Organisation
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
-class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent)
+class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[Organisation])(implicit val ec: ExecutionContext)
   extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, Organisation.formatOrgansiation, objectIdFormats) {
   //class should be empty after initial release
+  val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
+  println("Bulk insert completed: " + res.ok)
 
-  this.drop
-  val sourceOrganisations: JsValue = Json.parse(getClass.getResourceAsStream("/json/ApprovedOrganisations.json"))
-  val organisations: Seq[String] = (sourceOrganisations.as[JsArray] \\ "name").map(jsval => jsval.toString().replaceAll("\"",""))
-  
-  organisations.foreach(organisation => this.insert(Organisation(organisation)))
+  def fetchOrganisations():Future[Seq[String]] = {
+    for {
+      organisations <- this.findAll()
+    } yield organisations.map(_.name)
+  }
+
+  def addOrganisations(organisation: Organisation): Future[WriteResult] ={
+    this.insert(organisation)
+  }
+
+  def removeOrganisations(organisationName: String): Future[WriteResult] ={
+    this.remove("name" -> JsString(organisationName))
+  }
+}
+
+// dirty hack to support Guice app routing tests
+object DefaultProfessionalBodies {
+
+  def load: Seq[Organisation] = {
+    val sourceOrganisations: JsValue =
+      Json.
+        parse(getClass.
+          getResourceAsStream("/json/ApprovedOrganisations.json"))
+
+    val organisations: Seq[String] =
+      (sourceOrganisations.
+        as[JsArray] \\ "name").
+        map(jsval => jsval.toString().
+          replaceAll("\"", ""))
+
+    organisations.map(organisation => Organisation(organisation))
+  }
 
 }
 

@@ -1,4 +1,8 @@
 # microservice specific routes
 
 
-GET        /organisations           uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.getOrganisations
+GET         /organisations          uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.getOrganisations
+
+POST        /addOrganisation        uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.addOrganisation
+
+DELETE      /removeOrganisation     uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.removeOrganisation
