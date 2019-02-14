@@ -19,7 +19,7 @@ package uk.gov.hmrc.professionalbodies.repositories
 import javax.inject.{Inject, Named, Singleton}
 import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{MultiBulkWriteResult, WriteResult}
+import reactivemongo.api.commands.MultiBulkWriteResult
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -30,7 +30,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[Organisation])(implicit val ec: ExecutionContext)
-  extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, Organisation.formatOrgansiation, objectIdFormats) {
+  extends ReactiveRepository[Organisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, Organisation.formatOrganisation, objectIdFormats) {
   //class should be empty after initial release
   val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
   println("Bulk insert completed: " + res.ok)
@@ -41,12 +41,13 @@ class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Na
     } yield organisations.map(_.name)
   }
 
-  def addOrganisations(organisation: Organisation): Future[WriteResult] ={
-    this.insert(organisation)
+  def addOrganisations(organisation: Organisation): Future[Boolean] ={
+
+    this.insert(organisation).map(_.ok)
   }
 
-  def removeOrganisations(organisationName: String): Future[WriteResult] ={
-    this.remove("name" -> JsString(organisationName))
+  def removeOrganisations(organisationName: String): Future[Boolean] ={
+    this.remove("name" -> JsString(organisationName)).map(_.ok)
   }
 }
 
@@ -70,4 +71,7 @@ object DefaultProfessionalBodies {
 
 }
 
+case class MongoOrganisation(name: String, id: BSONObjectID = BSONObjectID.generate()) {
+  def apply(organisation: Organisation): MongoOrganisation = MongoOrganisation(organisation.name)
+}
 

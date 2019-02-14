@@ -17,7 +17,6 @@
 package uk.gov.hmrc.professionalbodies.service
 
 import javax.inject.{Inject, Singleton}
-import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
@@ -30,11 +29,11 @@ class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesReposito
     repository.fetchOrganisations()
   }
 
-  def addOrganisations(organisation: Organisation): Future[WriteResult] ={
+  def addOrganisations(organisation: Organisation): Future[Boolean] ={
     repository.addOrganisations(organisation)
   }
 
-  def removeOrganisations(organisationName: String): Future[WriteResult] = {
+  def removeOrganisations(organisationName: String): Future[Boolean] = {
     repository.removeOrganisations(organisationName)
   }
 

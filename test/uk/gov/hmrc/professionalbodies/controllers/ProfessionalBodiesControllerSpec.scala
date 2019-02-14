@@ -28,6 +28,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,10 +51,13 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     "Academic Primary Care Society for",
     "Access Consultants National Register of")
 
-
-  def theServiceWillReturnSomeOrganisations (): OngoingStubbing[Future[Seq[String]]] = {
+  def theServiceWillReturnSomeOrganisations(): OngoingStubbing[Future[Seq[String]]] = {
 
     when(mockService.fetchOrganisations()).thenReturn(Future.successful(organisations))
+  }
+
+  def theServiceWillReturnBoolean(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
+    when(mockService.addOrganisations(organisation)).thenReturn(Future.successful(boolean))
   }
 
 
@@ -70,5 +74,19 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       jsonBodyOf(result) shouldBe Json.toJson(organisations)
     }
   }
+
+/*  "POST /addOrganisation" should {
+
+    "return bad request given well-formed JSON in unexpected format" in {
+      val organisation = Organisation("bar")
+      theServiceWillReturnBoolean(organisation, false)
+      val result = controller.addOrganisation()(FakeRequest().withJsonBody(Json.parse(
+        """
+          |{"foo":"bar"}
+        """.stripMargin)))
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+
+  }*/
 
 }

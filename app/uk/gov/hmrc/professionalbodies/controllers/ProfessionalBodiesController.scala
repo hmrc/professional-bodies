@@ -18,10 +18,8 @@ package uk.gov.hmrc.professionalbodies.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
@@ -41,23 +39,24 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, servi
     }
   }
 
-  def addOrganisation(): Action[AnyContent] = Action { request =>
-    val sourceOrganisation: JsValue = request.body.asJson.get
-    val organisationName: String = (sourceOrganisation \ "name").get.toString().
-      replaceAll("\"", "")
-    val result: Future[WriteResult] = service.addOrganisations(Organisation(organisationName))
-//    result.onComplete{
-//      case WriteResult => Accepted //case is executed if a value is returned by the future without any exception
-//      case _ => BadRequest
-//    }
-    Ok
+  def addOrganisation(): Action[Organisation] = Action.async (parse.json[Organisation]) { request =>
+    val organisation: Organisation = request.body
+    val result: Future[Boolean] = service.addOrganisations(organisation)
+    result.map(if (_)
+      Ok
+    else
+      BadRequest
+    )
   }
 
-  def removeOrganisation(): Action[AnyContent] = Action { request =>
-    val sourceOrganisation: JsValue = request.body.asJson.get
-    val organisationName: String = (sourceOrganisation \ "name").get.toString()
-    service.removeOrganisations(organisationName)
-    println(organisationName)
-    Ok
+  def removeOrganisation(): Action[Organisation] = Action.async(parse.json[Organisation]) { request =>
+    val sourceOrganisation: Organisation = request.body
+    val result: Future[Boolean] = service.removeOrganisations(sourceOrganisation.name)
+
+    result.map(if (_)
+      Ok
+    else
+      BadRequest
+    )
   }
 }

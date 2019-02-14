@@ -75,6 +75,15 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
       inserted.head shouldBe Organisation(name)
     }
 
+    "adding a valid json as invalid organisation to body" in {
+      val org = Json.parse(
+        s"""
+           |{"fu": "bar"}
+        """.stripMargin)
+      val res = callEndPoint("addOrganisation", POST, org)
+      status(res) shouldBe BAD_REQUEST
+    }
+
     "remove organisation from db" in {
 //      val name = "a new org"
 //      val org = Json.parse(

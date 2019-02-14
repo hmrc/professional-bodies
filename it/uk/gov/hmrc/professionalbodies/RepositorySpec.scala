@@ -43,18 +43,16 @@ class RepositorySpec
 
     "add organisation to db" in {
       val name = "this is definitely a new org"
-      val res = repository.addOrganisations(Organisation(name)).futureValue
-      res.ok shouldBe true
-      res.n shouldBe 1
+      val res: Boolean = repository.addOrganisations(Organisation(name)).futureValue
+      res shouldBe true
       val inserted = repository.find("name" -> JsString(name)).futureValue
-      println(inserted)
       inserted.size shouldBe 1
       inserted.head shouldBe Organisation(name)
     }
 
     "remove organisation from db" in {
       val res = repository.removeOrganisations(organisations.head.name).futureValue
-      res.ok shouldBe true
+      res shouldBe true
       val result = repository.find("name" -> JsString(organisations.head.name)).futureValue
       result.isEmpty shouldBe true
     }
