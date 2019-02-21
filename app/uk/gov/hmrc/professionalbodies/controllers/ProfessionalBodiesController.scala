@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
+import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
@@ -35,7 +36,13 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, servi
 
   def getOrganisations: Action[AnyContent] = Action.async { implicit request =>
     service.fetchOrganisations().map { organisations =>
-      Ok(toJson(organisations)).withHeaders(CONTENT_TYPE -> JSON)
+      Ok(toJson(organisations))
+    }
+  }
+
+  def getOrganisationsAdmin: Action[AnyContent] = Action.async { implicit request =>
+    service.fetchOrganisationsAdmin.map { organisations =>
+      Ok(toJson(organisations))
     }
   }
 
@@ -50,13 +57,12 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, servi
   }
 
   def removeOrganisation(): Action[Organisation] = Action.async(parse.json[Organisation]) { request =>
-    val sourceOrganisation: Organisation = request.body
-    val result: Future[Boolean] = service.removeOrganisations(sourceOrganisation.name)
-
+    val organisationIdOption: Option[BSONObjectID] = request.body.id
+    val result: Future[Boolean] = service.removeOrganisations(organisationIdOption)
     result.map(if (_)
       Ok
-    else
-      BadRequest
+    else BadRequest
     )
+
   }
 }

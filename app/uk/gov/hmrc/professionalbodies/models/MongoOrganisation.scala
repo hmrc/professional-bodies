@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import com.google.inject.{AbstractModule, Provides}
-import javax.inject.{Named, Singleton}
-import uk.gov.hmrc.professionalbodies.models.Organisation
-import uk.gov.hmrc.professionalbodies.repositories.DefaultProfessionalBodies
+package uk.gov.hmrc.professionalbodies.models
 
-class Module extends AbstractModule {
+import play.api.libs.json.{Json, OFormat}
+import reactivemongo.bson.BSONObjectID
 
-  @Provides @Singleton @Named("professionalBodies")
-  def professionalBodies(): Seq[Organisation] = DefaultProfessionalBodies.load
 
-  override def configure(): Unit = {}
+case class MongoOrganisation(name: String, id: BSONObjectID = BSONObjectID.generate())
+
+object MongoOrganisation {
+  //implicit val objectIDFormat: OFormat[BSONObjectID] = Format(objectIdRead, objectIdWrite)
+  implicit val objectID: OFormat[BSONObjectID] = Json.format[BSONObjectID]
+  implicit val formatMongoOrganisation: OFormat[MongoOrganisation] = Json.format[MongoOrganisation]
 }

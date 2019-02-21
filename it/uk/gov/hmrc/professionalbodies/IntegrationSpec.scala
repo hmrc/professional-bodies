@@ -12,7 +12,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.professionalbodies.models.Organisation
-import uk.gov.hmrc.professionalbodies.repositories.{DefaultProfessionalBodies, ProfessionalBodiesRepository}
+import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.ExecutionContext
 
@@ -72,7 +72,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
       println(inserted)
 
       inserted.size shouldBe 1
-      inserted.head shouldBe Organisation(name)
+      inserted.head.name shouldBe name
     }
 
     "adding a valid json as invalid organisation to body" in {

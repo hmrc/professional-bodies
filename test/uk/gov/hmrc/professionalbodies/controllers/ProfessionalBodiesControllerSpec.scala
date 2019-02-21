@@ -17,6 +17,7 @@
 package uk.gov.hmrc.professionalbodies.controllers
 
 import akka.stream.Materializer
+import akka.util.ByteString
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Matchers
@@ -25,8 +26,9 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
 import play.api.libs.json.Json
+import play.api.libs.streams.Accumulator
 import play.api.test.FakeRequest
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Environment, mvc}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.professionalbodies.models.Organisation
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
@@ -51,15 +53,14 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     "Academic Primary Care Society for",
     "Access Consultants National Register of")
 
-  def theServiceWillReturnSomeOrganisations(): OngoingStubbing[Future[Seq[String]]] = {
 
+  def theServiceWillReturnSomeOrganisations(): OngoingStubbing[Future[Seq[String]]] = {
     when(mockService.fetchOrganisations()).thenReturn(Future.successful(organisations))
   }
 
   def theServiceWillReturnBoolean(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
     when(mockService.addOrganisations(organisation)).thenReturn(Future.successful(boolean))
   }
-
 
   "GET /" should {
     "return 200" in {
@@ -75,18 +76,17 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     }
   }
 
-/*  "POST /addOrganisation" should {
+  "POST /addOrganisation" should {
 
     "return bad request given well-formed JSON in unexpected format" in {
       val organisation = Organisation("bar")
-      theServiceWillReturnBoolean(organisation, false)
-      val result = controller.addOrganisation()(FakeRequest().withJsonBody(Json.parse(
+      theServiceWillReturnBoolean(organisation, boolean = false)
+      val result: Accumulator[ByteString, mvc.Result] = controller.addOrganisation()(FakeRequest().withJsonBody(Json.parse(
         """
           |{"foo":"bar"}
         """.stripMargin)))
-      status(result) shouldBe Status.BAD_REQUEST
+      val runResult: Int = extractAwait(result.run.flatMap(res => status(res)))
+      runResult shouldBe Status.UNSUPPORTED_MEDIA_TYPE
     }
-
-  }*/
-
+  }
 }
