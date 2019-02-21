@@ -17,7 +17,8 @@
 package uk.gov.hmrc.professionalbodies.service
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.professionalbodies.models.Organisation
+import reactivemongo.bson.BSONObjectID
+import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,16 +26,22 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ProfessionalBodiesService @Inject()(repository: ProfessionalBodiesRepository)(implicit ec : ExecutionContext){
 
-  def fetchOrganisations() :Future[Seq[String]] = {
-    repository.fetchOrganisations()
+  def fetchOrganisations(): Future[Seq[String]] = {
+    val organisations: Future[Seq[MongoOrganisation]] = repository.fetchOrganisations()
+    organisations.
+      map(orgs => orgs.
+        map(org => org.name))
   }
 
-  def addOrganisations(organisation: Organisation): Future[Boolean] ={
-    repository.addOrganisations(organisation)
-  }
+  def fetchOrganisationsAdmin: Future[Seq[MongoOrganisation]] = repository fetchOrganisations()
 
-  def removeOrganisations(organisationName: String): Future[Boolean] = {
-    repository.removeOrganisations(organisationName)
+  def addOrganisations(organisation: Organisation): Future[Boolean] = repository addOrganisations organisation
+
+  def removeOrganisations(organisationBSONObjectIDOption: Option[BSONObjectID]): Future[Boolean] = {
+    val organisationBSONObjectID = organisationBSONObjectIDOption.orNull
+    if (organisationBSONObjectID != null) {
+      repository removeOrganisations organisationBSONObjectID
+    } else Future.successful(false)
   }
 
 }
