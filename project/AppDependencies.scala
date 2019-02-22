@@ -1,15 +1,12 @@
 import play.core.PlayVersion.current
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
 
   val compile = Seq(
 
-    "uk.gov.hmrc"             %% "play-reactivemongo"       % "6.2.0",
     "uk.gov.hmrc"             %% "bootstrap-play-25"        % "3.14.0",
-    "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.4.0-play-25"
+    "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.12.0-play-25"
   )
 
   val test = Seq(
@@ -20,7 +17,7 @@ object AppDependencies {
     "org.scalatestplus.play"  %% "scalatestplus-play"       % "2.0.0"                 % "test, it",
     "uk.gov.hmrc"             %% "hmrctest"                 % "3.2.0"                 % "test, it",
     "org.mockito"             %  "mockito-core"             % "2.23.4"                % "test, it",
-    "uk.gov.hmrc"             %% "reactivemongo-test"       % "4.2.0-play-25"         % "test, it"
+    "uk.gov.hmrc"             %% "reactivemongo-test"       % "4.8.0-play-25"         % "test, it"
 
   )
 
