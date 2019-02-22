@@ -22,5 +22,8 @@ import reactivemongo.bson.BSONObjectID
 case class Organisation (name: String, id: Option[BSONObjectID] = None)
 
 object Organisation {
+
+  implicit val objectID: OFormat[BSONObjectID] = Json.format[BSONObjectID]
+
   implicit val formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
 }
