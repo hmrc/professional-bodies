@@ -31,6 +31,7 @@ import play.api.test.FakeRequest
 import play.api.{Configuration, Environment, mvc}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.professionalbodies.models.Organisation
+import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,6 +40,7 @@ import scala.concurrent.Future
 
 class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
+  val mockRepository: ProfessionalBodiesRepository = mock[ProfessionalBodiesRepository]
   val mockService: ProfessionalBodiesService = mock[ProfessionalBodiesService]
   val fakeRequest = FakeRequest("GET", "/")
   val env: Environment = Environment.simple()
