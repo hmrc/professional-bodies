@@ -23,15 +23,8 @@ import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
 object DefaultProfessionalBodies {
 
   def load: Seq[MongoOrganisation] = {
-    val organisations: Seq[Organisation] =
-      Json.parse(getClass.
-          getResourceAsStream("/json/ApprovedOrganisations.json")).as[Seq[Organisation]]
-    //val organisations = (sourceOrganisations.as[JsArray] \\ "names").as[JsString]
-    //second way that actually worked
-      /*(sourceOrganisations.
-        as[JsArray] \\ "name").
-        map(jsval => jsval.toString().
-          replaceAll("\"", ""))*/
+    val organisations: Seq[Organisation] = Json.parse(getClass.
+                                 getResourceAsStream("/json/ApprovedOrganisations.json")).as[Seq[Organisation]]
     organisations.map(organisation => MongoOrganisation(organisation.name))
   }
 }
