@@ -18,6 +18,7 @@ package uk.gov.hmrc.professionalbodies.models
 
 import play.api.libs.json.{Json, OFormat}
 import reactivemongo.bson.BSONObjectID
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
 case class MongoOrganisation(name: String, _id: BSONObjectID = BSONObjectID.generate())
 
