@@ -20,49 +20,40 @@ import javax.inject.{Inject, Singleton}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.professionalbodies.models.Organisation
-import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
+import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
-import scala.concurrent.Future
-//check if all code is running scala ExecutionContext as below, not global implicit
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, service : ProfessionalBodiesService)
+class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repository : ProfessionalBodiesRepository)
                                             (implicit val ec: ExecutionContext)
                                                 extends BaseController with I18nSupport {
 
   def getOrganisations: Action[AnyContent] = Action.async { implicit request =>
-    service.fetchOrganisations().map { organisations =>
-      Ok(toJson(organisations))
-    }
-  }
-
-  def getOrganisationsAdmin: Action[AnyContent] = Action.async { implicit request =>
-    service.fetchOrganisationsAdmin.map { organisations =>
+    repository.fetchOrganisations().map { organisations =>
       Ok(toJson(organisations))
     }
   }
 
   def addOrganisation(): Action[Organisation] = Action.async (parse.json[Organisation]) { request =>
-    val organisation: Organisation = request.body
-    val result: Future[Boolean] = service.addOrganisations(organisation)
-    result.map(if (_)
-      Ok
-    else
-      BadRequest
-    )
+    repository.addOrganisation(request.body).map {
+      case false => InternalServerError
+      case _ => Ok
+    }
   }
 
   def removeOrganisation(): Action[Organisation] = Action.async(parse.json[Organisation]) { request =>
-    val organisationIdOption: Option[BSONObjectID] = request.body.id
-    val result: Future[Boolean] = service.removeOrganisations(organisationIdOption)
-    result.map(if (_)
-      Ok
-    else BadRequest
-    )
+    repository.removeOrganisation(request.body).map {
+      case false => InternalServerError
+      case _ => Ok
+    }
+  }
 
+  def getAdminOrganisations: Action[AnyContent] = Action.async { implicit request =>
+    repository.fetchOrganisationsAdmin().map { organisations =>
+      Ok(toJson(organisations))
+    }
   }
 }
