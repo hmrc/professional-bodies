@@ -19,11 +19,8 @@ package uk.gov.hmrc.professionalbodies.models
 import play.api.libs.json.{Json, OFormat}
 import reactivemongo.bson.BSONObjectID
 
-
-case class MongoOrganisation(name: String, id: BSONObjectID = BSONObjectID.generate())
+case class MongoOrganisation(name: String, _id: BSONObjectID = BSONObjectID.generate())
 
 object MongoOrganisation {
-  //implicit val objectIDFormat: OFormat[BSONObjectID] = Format(objectIdRead, objectIdWrite)
-  implicit val objectID: OFormat[BSONObjectID] = Json.format[BSONObjectID]
   implicit val formatMongoOrganisation: OFormat[MongoOrganisation] = Json.format[MongoOrganisation]
 }

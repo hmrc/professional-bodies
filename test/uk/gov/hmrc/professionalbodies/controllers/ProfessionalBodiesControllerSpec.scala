@@ -17,7 +17,6 @@
 package uk.gov.hmrc.professionalbodies.controllers
 
 import akka.stream.Materializer
-import akka.util.ByteString
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Matchers
@@ -26,27 +25,26 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
 import play.api.libs.json.Json
-import play.api.libs.streams.Accumulator
+import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.{Configuration, Environment, mvc}
+import play.api.test.Helpers._
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.professionalbodies.models.Organisation
+import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
 import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
-import uk.gov.hmrc.professionalbodies.service.ProfessionalBodiesService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
   val mockRepository: ProfessionalBodiesRepository = mock[ProfessionalBodiesRepository]
-  val mockService: ProfessionalBodiesService = mock[ProfessionalBodiesService]
-  val fakeRequest = FakeRequest("GET", "/")
+  val fakeRequestGetOrganisations = FakeRequest("GET", "/organisations")
+  val fakeRequestAddOrganisation = FakeRequest("POST", "/addOrganisation")
   val env: Environment = Environment.simple()
   val configuration: Configuration = Configuration.load(env)
   val messageApi = new DefaultMessagesApi(env, configuration, new DefaultLangs(configuration))
-  val controller = new ProfessionalBodiesController(messageApi, mockService)
+  val controller = new ProfessionalBodiesController(messageApi, mockRepository)
   implicit val mat: Materializer = app.materializer
 
   val organisations = Seq("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017",
@@ -55,40 +53,100 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     "Academic Primary Care Society for",
     "Access Consultants National Register of")
 
+  val mongoOrgs: Seq[MongoOrganisation] = organisations.map(org => MongoOrganisation(org))
 
-  def theServiceWillReturnSomeOrganisations(): OngoingStubbing[Future[Seq[String]]] = {
-    when(mockService.fetchOrganisations()).thenReturn(Future.successful(organisations))
+  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[String]]] = {
+    when(mockRepository.fetchOrganisations()).thenReturn(Future.successful(organisations))
+  }
+  def theRepoWillReturnSomeAdminOrganisations: OngoingStubbing[Future[Seq[MongoOrganisation]]] = {
+    when(mockRepository.fetchOrganisationsAdmin()).thenReturn(Future.successful(mongoOrgs))
   }
 
-  def theServiceWillReturnBoolean(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockService.addOrganisations(organisation)).thenReturn(Future.successful(boolean))
+  def theRepoWillReturnBooleanWhenAddingOrgs(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
+    when(mockRepository.addOrganisation(organisation)).thenReturn(Future.successful(boolean))
   }
+
+  def theRepoWillReturnBooleanWhenDeletingOrgs(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
+    when(mockRepository.removeOrganisation(organisation)).thenReturn(Future.successful(boolean))
+  }
+
 
   "GET /" should {
     "return 200" in {
-      theServiceWillReturnSomeOrganisations()
-      val result = controller.getOrganisations()(fakeRequest)
+      theRepoWillReturnSomeOrganisations
+      val result = controller.getOrganisations()(fakeRequestGetOrganisations)
+      status(result) shouldBe Status.OK
+    }
+
+    "return the list of organisations names" in {
+      theRepoWillReturnSomeOrganisations
+      val result = await(controller.getOrganisations()(fakeRequestGetOrganisations))
+      jsonBodyOf(result) shouldBe Json.toJson(organisations)
+    }
+  }
+
+  "GET /adminOrganisations" should {
+
+    "return 200" in {
+      theRepoWillReturnSomeAdminOrganisations
+      val result = controller.getAdminOrganisations()(fakeRequestGetOrganisations)
       status(result) shouldBe Status.OK
     }
 
     "return the list of organisations" in {
-      theServiceWillReturnSomeOrganisations()
-      val result = await(controller.getOrganisations()(fakeRequest))
-      jsonBodyOf(result) shouldBe Json.toJson(organisations)
+      theRepoWillReturnSomeAdminOrganisations
+      val result = await(controller.getAdminOrganisations()(fakeRequestGetOrganisations))
+      jsonBodyOf(result) shouldBe Json.toJson(mongoOrgs)
     }
   }
 
   "POST /addOrganisation" should {
 
-    "return bad request given well-formed JSON in unexpected format" in {
+    "return 200" in {
       val organisation = Organisation("bar")
-      theServiceWillReturnBoolean(organisation, boolean = false)
-      val result: Accumulator[ByteString, mvc.Result] = controller.addOrganisation()(FakeRequest().withJsonBody(Json.parse(
-        """
-          |{"foo":"bar"}
-        """.stripMargin)))
-      val runResult: Int = extractAwait(result.run.flatMap(res => status(res)))
-      runResult shouldBe Status.UNSUPPORTED_MEDIA_TYPE
+      theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = true)
+      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
+      val result: Future[Result] = call(controller.addOrganisation(), req)
+      status(result) shouldBe Status.OK
+    }
+
+    "return 500 when repo returns false on being unable to add valid Org" in {
+      val organisation = Organisation("bar")
+      theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = false)
+      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
+      val result: Future[Result] = call(controller.addOrganisation(), req)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+    "return 400 when invalid org is added" in {
+      val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"bar\"}"))
+      val result: Future[Result] = call(controller.addOrganisation(), req)
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+  }
+
+  "DELETE /removeOrganisation" should {
+
+    "return 200" in {
+      val organisation = Organisation("bar", Some("id"))
+      theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = true)
+      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
+      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      status(result) shouldBe Status.OK
+    }
+
+    "return 500 when repo returns false on being unable to remove valid Org" in {
+      val organisation = Organisation("bar", Some("id"))
+      theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = false)
+      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
+      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+    "return 400 when invalid org is sent to be removed" in {
+      val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"barId\"}"))
+      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      status(result) shouldBe Status.BAD_REQUEST
     }
   }
 }

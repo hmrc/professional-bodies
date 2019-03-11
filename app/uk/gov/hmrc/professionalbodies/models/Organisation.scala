@@ -17,13 +17,11 @@
 package uk.gov.hmrc.professionalbodies.models
 
 import play.api.libs.json.{Json, OFormat}
-import reactivemongo.bson.BSONObjectID
 
-case class Organisation (name: String, id: Option[BSONObjectID] = None)
+case class Organisation (name: String, id: Option[String] = None)
 
 object Organisation {
 
-  implicit val objectID: OFormat[BSONObjectID] = Json.format[BSONObjectID]
-
   implicit val formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
+
 }

@@ -34,11 +34,32 @@ class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Na
   val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
   println("Bulk insert completed: " + res.ok)
 
-  def fetchOrganisations(): Future[Seq[MongoOrganisation]] = findAll()
+  def fetchOrganisations(): Future[Seq[String]] = {
+    findAll().map(orgs => orgs.map(org => org.name))
+  }
 
-  def addOrganisations(organisation: Organisation): Future[Boolean] = this.insert(MongoOrganisation.apply(organisation.name)).map(_.ok)
+  def fetchOrganisationsAdmin(): Future[Seq[MongoOrganisation]] = findAll()
 
-  def removeOrganisations(organisationBSONObjectID: BSONObjectID): Future[Boolean] = this.removeById(organisationBSONObjectID).map(_.ok)
+  def addOrganisation(organisation: Organisation): Future[Boolean] = {
+    insert(MongoOrganisation.apply(organisation.name)).map { res =>
+      if (!res.ok) {
+        throw new IllegalStateException("Write to repository unsuccessful")
+      } else res.ok
+    }
+  }
+
+  private def removeOrganisations(organisationBSONObjectID: BSONObjectID): Future[Boolean] = {
+    removeById(organisationBSONObjectID).map { res =>
+      if (!res.ok) {
+        throw new IllegalStateException("Delete from repository unsuccessful")
+      } else res.ok
+    }
+  }
+
+  def removeOrganisation(organisation: Organisation): Future[Boolean] = {
+    removeOrganisations(BSONObjectID.parse(organisation.id.getOrElse(throw new IllegalArgumentException("ID of organisation to delete must be specified"))).get)
+  }
+
 }
 
 

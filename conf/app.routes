@@ -1,7 +1,9 @@
-# microservice specific routes
+# microservice specific routesorganisations
 
 
 GET         /organisations          uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.getOrganisations
+
+GET         /adminOrganisations     uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.getAdminOrganisations
 
 POST        /addOrganisation        uk.gov.hmrc.professionalbodies.controllers.ProfessionalBodiesController.addOrganisation
 
