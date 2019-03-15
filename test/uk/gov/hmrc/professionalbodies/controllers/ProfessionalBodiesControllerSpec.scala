@@ -47,17 +47,20 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
   val controller = new ProfessionalBodiesController(messageApi, mockRepository)
   implicit val mat: Materializer = app.materializer
 
-  val organisations = Seq("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017",
-    "Academic and Research Surgery Society of",
-    "Academic Gaming and Simulation in Education and Training Society for",
-    "Academic Primary Care Society for",
-    "Access Consultants National Register of")
+  val organisations = Seq(
+    Organisation("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
+    Organisation("Academic and Research Surgery Society of"),
+    Organisation("Academic Gaming and Simulation in Education and Training Society for"),
+    Organisation("Academic Primary Care Society for"),
+    Organisation("Access Consultants National Register of")
+  )
 
-  val mongoOrgs: Seq[MongoOrganisation] = organisations.map(org => MongoOrganisation(org))
+  val mongoOrgs: Seq[MongoOrganisation] = organisations.map(org => MongoOrganisation(org.name))
 
-  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[String]]] = {
+  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[Organisation]]] = {
     when(mockRepository.fetchOrganisations()).thenReturn(Future.successful(organisations))
   }
+
   def theRepoWillReturnSomeAdminOrganisations: OngoingStubbing[Future[Seq[MongoOrganisation]]] = {
     when(mockRepository.fetchOrganisationsAdmin()).thenReturn(Future.successful(mongoOrgs))
   }

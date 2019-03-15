@@ -27,19 +27,28 @@ import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+// TODO naming: we should refer consistently to "professional bodies" rather than "organisations" (a professional body is a particular type of organisation)
+// TODO rename to ProfessionalBodiesMongoRepository and extract a trait called ProfessionalBodiesRepository which declares following functions:
+// findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
+// insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
+// deleteProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
 @Singleton
 class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoOrganisation])(implicit val ec: ExecutionContext)
   extends ReactiveRepository[MongoOrganisation, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoOrganisation.formatMongoOrganisation, objectIdFormats) {
-  //class should be empty after initial release
-  val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
-  println("Bulk insert completed: " + res.ok)
 
-  def fetchOrganisations(): Future[Seq[String]] = {
-    findAll().map(orgs => orgs.map(org => org.name))
+  // TODO move data insertion into scheduled task
+  val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
+
+  // TODO rename to findAllProfessionalBodies()
+  def fetchOrganisations(): Future[Seq[Organisation]] = {
+    fetchOrganisationsAdmin().map(result => result.map(found => Organisation(found.name, Some(found._id.stringify))))
   }
 
+  // TODO this function is redundant as it merely calls findAll() [this is "indirection"]
+  // also, admin UI can simply call the same findAllProfessionalBodies() function
   def fetchOrganisationsAdmin(): Future[Seq[MongoOrganisation]] = findAll()
 
+  // TODO rename to insertProfessionalBody(professionalBody)
   def addOrganisation(organisation: Organisation): Future[Boolean] = {
     insert(MongoOrganisation.apply(organisation.name)).map { res =>
       if (!res.ok) {
@@ -56,6 +65,7 @@ class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Na
     }
   }
 
+  // TODO rename to deleteProfessionalBody(professionalBody)
   def removeOrganisation(organisation: Organisation): Future[Boolean] = {
     removeOrganisations(BSONObjectID.parse(organisation.id.getOrElse(throw new IllegalArgumentException("ID of organisation to delete must be specified"))).get)
   }

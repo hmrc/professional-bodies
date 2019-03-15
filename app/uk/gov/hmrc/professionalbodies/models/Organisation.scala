@@ -18,6 +18,8 @@ package uk.gov.hmrc.professionalbodies.models
 
 import play.api.libs.json.{Json, OFormat}
 
+// TODO rename to ProfessionalBody
+// TODO implement Ordered and order by name
 case class Organisation (name: String, id: Option[String] = None)
 
 object Organisation {

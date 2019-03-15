@@ -47,19 +47,19 @@ class RepositorySpec
     Organisation("Academic and Research Surgery Society of"),
     Organisation("Academic Gaming and Simulation in Education and Training Society for"),
     Organisation("Academic Primary Care Society for"),
-    Organisation("Access Consultants National Register of"))
+    Organisation("Access Consultants National Register of")
+  )
+
   val mongoOrganisations: Seq[MongoOrganisation] = organisations.map(organisation => MongoOrganisation(organisation.name))
 
   class MongoScenario(success: Boolean = true) {
     val repository: ProfessionalBodiesRepository = new ProfessionalBodiesRepository(mongoComponent, mongoOrganisations) {
       override def removeById(id: BSONObjectID, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult] = if (!success) {
-        println("FAKING WRITE RESULT!!!!!!!!!!!")
         Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
       } else super.removeById(id, writeConcern)
 
       override def insert(entity: MongoOrganisation)(implicit ec: ExecutionContext): Future[WriteResult] = {
         if (!success){
-          println("FAKING WRITE RESULT!!!!!!!!!!!")
           Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
         } else super.insert(entity)
       }
@@ -71,8 +71,7 @@ class RepositorySpec
   "The repository" should {
     "return All the organisation" in new MongoScenario {
       whenReady(repository.fetchOrganisations()) { res =>
-        println(res)
-        res shouldBe organisations.map(org => org.name)
+        res.map(_.name) shouldBe organisations.map(org => org.name)
       }
     }
 

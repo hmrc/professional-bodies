@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
+// TODO move into same file as ProfessionalBodiesMongoRepository and rename to MongoProfessionalBody
 case class MongoOrganisation(name: String, _id: BSONObjectID = BSONObjectID.generate())
 
 object MongoOrganisation {
