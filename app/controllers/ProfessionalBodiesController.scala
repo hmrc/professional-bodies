@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies.controllers
+package controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.professionalbodies.models.Organisation
-import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
+import models.ProfessionalBody
+import repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.ExecutionContext
 
@@ -32,28 +32,28 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repos
                                                 extends BaseController with I18nSupport {
 
   def getOrganisations: Action[AnyContent] = Action.async { implicit request =>
-    repository.fetchOrganisations().map { organisations =>
+    repository.findAllProfessionalBodies().map { organisations =>
       Ok(toJson(organisations))
     }
   }
 
-  def addOrganisation(): Action[Organisation] = Action.async (parse.json[Organisation]) { request =>
-    repository.addOrganisation(request.body).map {
+  def addOrganisation(): Action[ProfessionalBody] = Action.async (parse.json[ProfessionalBody]) { request =>
+    repository.insertProfessionalBody(request.body).map {
       case false => InternalServerError
       case _ => Ok
     }
   }
 
-  def removeOrganisation(): Action[Organisation] = Action.async(parse.json[Organisation]) { request =>
-    repository.removeOrganisation(request.body).map {
+  def removeOrganisation(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
+    repository.removeProfessionalBody(request.body).map {
       case false => InternalServerError
       case _ => Ok
     }
   }
 
-  def getAdminOrganisations: Action[AnyContent] = Action.async { implicit request =>
-    repository.fetchOrganisationsAdmin().map { organisations =>
-      Ok(toJson(organisations))
-    }
-  }
+//  def getAdminOrganisations: Action[AnyContent] = Action.async { implicit request =>
+//    repository.fetchOrganisationsAdmin().map { organisations =>
+//      Ok(toJson(organisations))
+//    }
+//  }
 }

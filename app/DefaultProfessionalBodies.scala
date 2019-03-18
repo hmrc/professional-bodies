@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies
-
+import models.ProfessionalBody
 import play.api.libs.json.Json
-import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
+import repositories.MongoProfessionalBody
 
 // dirty hack to support Guice app routing tests
 object DefaultProfessionalBodies {
 
-  def load: Seq[MongoOrganisation] = {
-    val organisations: Seq[Organisation] = Json.parse(getClass.
-                                 getResourceAsStream("/json/ApprovedOrganisations.json")).as[Seq[Organisation]]
-    organisations.map(organisation => MongoOrganisation(organisation.name))
+  def load: Seq[MongoProfessionalBody] = {
+    val professionalBodies: Seq[ProfessionalBody] = Json.parse(getClass.
+                                 getResourceAsStream("/json/ApprovedOrganisations.json")).as[Seq[ProfessionalBody]]
+    professionalBodies.map(professionalBody => MongoProfessionalBody(professionalBody.name))
   }
 }

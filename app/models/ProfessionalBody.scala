@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies.models
+package models
 
 import play.api.libs.json.{Json, OFormat}
 
-// TODO rename to ProfessionalBody
 // TODO implement Ordered and order by name
-case class Organisation (name: String, id: Option[String] = None)
+case class ProfessionalBody(name: String, id: Option[String] = None)
 
-object Organisation {
-
-  implicit val formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
-
+object ProfessionalBody {
+  implicit val formatOrganisation: OFormat[ProfessionalBody] = Json.format[ProfessionalBody]
 }
