@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies
-
 /*
  * Copyright 2019 HM Revenue & Customs
  *
@@ -34,13 +32,13 @@ package uk.gov.hmrc.professionalbodies
 
 import com.google.inject.{AbstractModule, Provides}
 import javax.inject.{Named, Singleton}
-import uk.gov.hmrc.professionalbodies.models.MongoOrganisation
+import repositories.MongoProfessionalBody
 
 class Module extends AbstractModule {
 
   @Provides @Singleton @Named("professionalBodies")
-  def professionalBodies(): Seq[MongoOrganisation] = {
-    DefaultProfessionalBodies.load.map(organisation => MongoOrganisation.apply(organisation.name))
+  def professionalBodies(): Seq[MongoProfessionalBody] = {
+    DefaultProfessionalBodies.load.map(organisation => MongoProfessionalBody.apply(organisation.name))
 
   }
 

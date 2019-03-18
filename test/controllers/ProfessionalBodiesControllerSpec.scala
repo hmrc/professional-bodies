@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies.controllers
+package controllers
 
 import akka.stream.Materializer
 import org.mockito.Mockito.when
@@ -30,8 +30,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
-import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
+import models.ProfessionalBody
+import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -48,29 +48,29 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
   implicit val mat: Materializer = app.materializer
 
   val organisations = Seq(
-    Organisation("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
-    Organisation("Academic and Research Surgery Society of"),
-    Organisation("Academic Gaming and Simulation in Education and Training Society for"),
-    Organisation("Academic Primary Care Society for"),
-    Organisation("Access Consultants National Register of")
+    ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
+    ProfessionalBody("Academic and Research Surgery Society of"),
+    ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
+    ProfessionalBody("Academic Primary Care Society for"),
+    ProfessionalBody("Access Consultants National Register of")
   )
 
-  val mongoOrgs: Seq[MongoOrganisation] = organisations.map(org => MongoOrganisation(org.name))
+  val mongoOrgs: Seq[MongoProfessionalBody] = organisations.map(org => MongoProfessionalBody(org.name))
 
-  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[Organisation]]] = {
-    when(mockRepository.fetchOrganisations()).thenReturn(Future.successful(organisations))
+  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[ProfessionalBody]]] = {
+    when(mockRepository.findAllProfessionalBodies()).thenReturn(Future.successful(organisations))
   }
 
-  def theRepoWillReturnSomeAdminOrganisations: OngoingStubbing[Future[Seq[MongoOrganisation]]] = {
+/*  def theRepoWillReturnSomeAdminOrganisations: OngoingStubbing[Future[Seq[MongoOrganisation]]] = {
     when(mockRepository.fetchOrganisationsAdmin()).thenReturn(Future.successful(mongoOrgs))
+  }*/
+
+  def theRepoWillReturnBooleanWhenAddingOrgs(organisation: ProfessionalBody, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
+    when(mockRepository.insertProfessionalBody(organisation)).thenReturn(Future.successful(boolean))
   }
 
-  def theRepoWillReturnBooleanWhenAddingOrgs(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockRepository.addOrganisation(organisation)).thenReturn(Future.successful(boolean))
-  }
-
-  def theRepoWillReturnBooleanWhenDeletingOrgs(organisation: Organisation, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockRepository.removeOrganisation(organisation)).thenReturn(Future.successful(boolean))
+  def theRepoWillReturnBooleanWhenDeletingOrgs(organisation: ProfessionalBody, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
+    when(mockRepository.removeProfessionalBody(organisation)).thenReturn(Future.successful(boolean))
   }
 
 
@@ -88,7 +88,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     }
   }
 
-  "GET /adminOrganisations" should {
+/*  "GET /adminOrganisations" should {
 
     "return 200" in {
       theRepoWillReturnSomeAdminOrganisations
@@ -101,12 +101,12 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       val result = await(controller.getAdminOrganisations()(fakeRequestGetOrganisations))
       jsonBodyOf(result) shouldBe Json.toJson(mongoOrgs)
     }
-  }
+  }*/
 
   "POST /addOrganisation" should {
 
     "return 200" in {
-      val organisation = Organisation("bar")
+      val organisation = ProfessionalBody("bar")
       theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = true)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
       val result: Future[Result] = call(controller.addOrganisation(), req)
@@ -114,7 +114,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     }
 
     "return 500 when repo returns false on being unable to add valid Org" in {
-      val organisation = Organisation("bar")
+      val organisation = ProfessionalBody("bar")
       theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = false)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
       val result: Future[Result] = call(controller.addOrganisation(), req)
@@ -131,7 +131,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
   "DELETE /removeOrganisation" should {
 
     "return 200" in {
-      val organisation = Organisation("bar", Some("id"))
+      val organisation = ProfessionalBody("bar", Some("id"))
       theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = true)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
       val result: Future[Result] = call(controller.removeOrganisation(), req)
@@ -139,7 +139,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     }
 
     "return 500 when repo returns false on being unable to remove valid Org" in {
-      val organisation = Organisation("bar", Some("id"))
+      val organisation = ProfessionalBody("bar", Some("id"))
       theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = false)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
       val result: Future[Result] = call(controller.removeOrganisation(), req)

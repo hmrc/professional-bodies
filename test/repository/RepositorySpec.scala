@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies.repository
+package repository
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
@@ -24,8 +24,8 @@ import reactivemongo.api.commands.{UpdateWriteResult, WriteConcern, WriteResult}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.professionalbodies.models.{MongoOrganisation, Organisation}
-import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
+import models.ProfessionalBody
+import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -43,14 +43,14 @@ class RepositorySpec
   }
 
   val organisations = Seq(
-    Organisation("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
-    Organisation("Academic and Research Surgery Society of"),
-    Organisation("Academic Gaming and Simulation in Education and Training Society for"),
-    Organisation("Academic Primary Care Society for"),
-    Organisation("Access Consultants National Register of")
+    ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
+    ProfessionalBody("Academic and Research Surgery Society of"),
+    ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
+    ProfessionalBody("Academic Primary Care Society for"),
+    ProfessionalBody("Access Consultants National Register of")
   )
 
-  val mongoOrganisations: Seq[MongoOrganisation] = organisations.map(organisation => MongoOrganisation(organisation.name))
+  val mongoOrganisations: Seq[MongoProfessionalBody] = organisations.map(organisation => MongoProfessionalBody(organisation.name))
 
   class MongoScenario(success: Boolean = true) {
     val repository: ProfessionalBodiesRepository = new ProfessionalBodiesRepository(mongoComponent, mongoOrganisations) {
@@ -58,7 +58,7 @@ class RepositorySpec
         Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
       } else super.removeById(id, writeConcern)
 
-      override def insert(entity: MongoOrganisation)(implicit ec: ExecutionContext): Future[WriteResult] = {
+      override def insert(entity: MongoProfessionalBody)(implicit ec: ExecutionContext): Future[WriteResult] = {
         if (!success){
           Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
         } else super.insert(entity)
@@ -70,38 +70,38 @@ class RepositorySpec
 
   "The repository" should {
     "return All the organisation" in new MongoScenario {
-      whenReady(repository.fetchOrganisations()) { res =>
+      whenReady(repository.findAllProfessionalBodies()) { res =>
         res.map(_.name) shouldBe organisations.map(org => org.name)
       }
     }
 
-    "return all mongoOrganisations" in new MongoScenario {
+/*    "return all mongoOrganisations" in new MongoScenario {
       whenReady(repository.fetchOrganisationsAdmin()) { res =>
         res shouldBe mongoOrganisations
       }
-    }
+    }*/
 
     "add organisation to db" in new MongoScenario {
       val name = "this is definitely a new org"
-      val res: Boolean = repository.addOrganisation(Organisation(name)).futureValue
+      val res: Boolean = repository.insertProfessionalBody(ProfessionalBody(name)).futureValue
       res shouldBe true
-      val inserted: List[MongoOrganisation] = repository.find("name" -> JsString(name)).futureValue
+      val inserted: List[MongoProfessionalBody] = repository.find("name" -> JsString(name)).futureValue
       inserted.size shouldBe 1
       inserted.head.name shouldBe name
     }
 
     "throw an illegal state exception when write to mongo fails" in new MongoScenario(false) {
       val ex: IllegalStateException = intercept[IllegalStateException] {
-        Await.result(repository.addOrganisation(Organisation("foo")), 2 seconds)
+        Await.result(repository.insertProfessionalBody(ProfessionalBody("foo")), 2 seconds)
       }
       ex.getMessage shouldBe "Write to repository unsuccessful"
     }
 
     "remove organisation from db" in new MongoScenario {
-      val mongoOrganisation = MongoOrganisation("fu")
+      val mongoOrganisation = MongoProfessionalBody("fu")
       whenReady(repository.insert(mongoOrganisation)) { written =>
-        val organisation = Organisation(mongoOrganisation.name, Some(mongoOrganisation._id.stringify))
-        whenReady(repository.removeOrganisation(organisation)) { res =>
+        val organisation = ProfessionalBody(mongoOrganisation.name, Some(mongoOrganisation._id.stringify))
+        whenReady(repository.removeProfessionalBody(organisation)) { res =>
           res shouldBe true
           whenReady(repository.findById(mongoOrganisation._id)) { maybeMongoOrg =>
             maybeMongoOrg.isDefined shouldBe false
@@ -111,22 +111,18 @@ class RepositorySpec
     }
 
     "throw illegal argument exception given invalid BSONObjectID" in new MongoScenario {
-      an[IllegalArgumentException] shouldBe thrownBy(repository.removeOrganisation(Organisation("foo", Some("definitely not a BSON Object ID"))))
+      an[IllegalArgumentException] shouldBe thrownBy(repository.removeProfessionalBody(ProfessionalBody("foo", Some("definitely not a BSON Object ID"))))
     }
 
     "throw illegal argument exception given no ID" in new MongoScenario {
-      an[IllegalArgumentException] shouldBe thrownBy(repository.removeOrganisation(Organisation("foo", None)))
+      an[IllegalArgumentException] shouldBe thrownBy(repository.removeProfessionalBody(ProfessionalBody("foo", None)))
     }
 
     "throw an illegal state exception when delete from mongo fails" in new MongoScenario(false) {
       val ex: IllegalStateException = intercept[IllegalStateException] {
-        Await.result(repository.removeOrganisation(Organisation("foo", Some(BSONObjectID.generate().stringify))), 2 seconds)
+        Await.result(repository.removeProfessionalBody(ProfessionalBody("foo", Some(BSONObjectID.generate().stringify))), 2 seconds)
       }
       ex.getMessage shouldBe "Delete from repository unsuccessful"
     }
-
   }
 }
-
-
-

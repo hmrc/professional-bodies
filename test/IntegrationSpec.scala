@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.professionalbodies
-
 import akka.stream.Materializer
+import models.ProfessionalBody
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -26,9 +25,8 @@ import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.ProfessionalBodiesRepository
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.professionalbodies.models.Organisation
-import uk.gov.hmrc.professionalbodies.repositories.ProfessionalBodiesRepository
 
 import scala.concurrent.ExecutionContext
 
@@ -61,8 +59,8 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
     }
 
 
-  def sortedResult (result: Result): Seq[Organisation] = {
-    jsonBodyOf(result).as[JsArray].value.map(_.toString().replaceAll("\"","")).sorted.map(organisation => Organisation(organisation))
+  def sortedResult (result: Result): Seq[ProfessionalBody] = {
+    jsonBodyOf(result).as[JsArray].value.map(_.toString().replaceAll("\"","")).sorted.map(organisation => ProfessionalBody(organisation))
   }
 
   "The App" should {
