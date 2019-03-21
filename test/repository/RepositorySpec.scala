@@ -25,7 +25,7 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
 import models.ProfessionalBody
-import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
+import repositories.{MongoProfessionalBody, ProfessionalBodiesMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -53,7 +53,7 @@ class RepositorySpec
   val mongoOrganisations: Seq[MongoProfessionalBody] = organisations.map(organisation => MongoProfessionalBody(organisation.name))
 
   class MongoScenario(success: Boolean = true) {
-    val repository: ProfessionalBodiesRepository = new ProfessionalBodiesRepository(mongoComponent, mongoOrganisations) {
+    val repository: ProfessionalBodiesMongoRepository = new ProfessionalBodiesMongoRepository(mongoComponent, mongoOrganisations) {
       override def removeById(id: BSONObjectID, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult] = if (!success) {
         Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
       } else super.removeById(id, writeConcern)

@@ -24,27 +24,29 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import models.ProfessionalBody
 import play.api.libs.json.{Json, OFormat}
-
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-// TODO naming: we should refer consistently to "professional bodies" rather than "organisations" (a professional body is a particular type of organisation)
-// TODO rename to ProfessionalBodiesMongoRepository and extract a trait called ProfessionalBodiesRepository which declares following functions:
-// findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
-// insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
-// deleteProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
+trait ProfessionalBodiesRepository {
+  def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
+
+  def insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
+
+  def removeProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
+}
+
 @Singleton
-class ProfessionalBodiesRepository @Inject()(mongo : ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoProfessionalBody])(implicit val ec: ExecutionContext)
-  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats) {
+class ProfessionalBodiesMongoRepository @Inject()(mongo: ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoProfessionalBody])(implicit val ec: ExecutionContext)
+  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats) with ProfessionalBodiesRepository {
 
   // TODO move data insertion into scheduled task
   val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
-  
-  def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = {
+
+  override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = {
     findAll().map(result => result.map(found => ProfessionalBody(found.name, Some(found._id.stringify))))
   }
 
-  def insertProfessionalBody(organisation: ProfessionalBody): Future[Boolean] = {
+  override def insertProfessionalBody(organisation: ProfessionalBody): Future[Boolean] = {
     insert(MongoProfessionalBody.apply(organisation.name)).map { res =>
       if (!res.ok) {
         throw new IllegalStateException("Write to repository unsuccessful")

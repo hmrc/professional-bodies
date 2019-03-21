@@ -22,29 +22,29 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import models.ProfessionalBody
-import repositories.ProfessionalBodiesRepository
+import repositories.ProfessionalBodiesMongoRepository
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repository : ProfessionalBodiesRepository)
+class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repository : ProfessionalBodiesMongoRepository)
                                             (implicit val ec: ExecutionContext)
                                                 extends BaseController with I18nSupport {
 
-  def getOrganisations: Action[AnyContent] = Action.async { implicit request =>
+  def getProfessionalBodies: Action[AnyContent] = Action.async { implicit request =>
     repository.findAllProfessionalBodies().map { organisations =>
       Ok(toJson(organisations))
     }
   }
 
-  def addOrganisation(): Action[ProfessionalBody] = Action.async (parse.json[ProfessionalBody]) { request =>
+  def addProfessionalBody(): Action[ProfessionalBody] = Action.async (parse.json[ProfessionalBody]) { request =>
     repository.insertProfessionalBody(request.body).map {
       case false => InternalServerError
       case _ => Ok
     }
   }
 
-  def removeOrganisation(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
+  def removeProfessionalBody(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
     repository.removeProfessionalBody(request.body).map {
       case false => InternalServerError
       case _ => Ok

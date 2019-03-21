@@ -31,14 +31,14 @@ import play.api.test.Helpers._
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
 import models.ProfessionalBody
-import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
+import repositories.{MongoProfessionalBody, ProfessionalBodiesMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
-  val mockRepository: ProfessionalBodiesRepository = mock[ProfessionalBodiesRepository]
+  val mockRepository: ProfessionalBodiesMongoRepository = mock[ProfessionalBodiesMongoRepository]
   val fakeRequestGetOrganisations = FakeRequest("GET", "/organisations")
   val fakeRequestAddOrganisation = FakeRequest("POST", "/addOrganisation")
   val env: Environment = Environment.simple()
@@ -77,13 +77,13 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
   "GET /" should {
     "return 200" in {
       theRepoWillReturnSomeOrganisations
-      val result = controller.getOrganisations()(fakeRequestGetOrganisations)
+      val result = controller.getProfessionalBodies()(fakeRequestGetOrganisations)
       status(result) shouldBe Status.OK
     }
 
     "return the list of organisations names" in {
       theRepoWillReturnSomeOrganisations
-      val result = await(controller.getOrganisations()(fakeRequestGetOrganisations))
+      val result = await(controller.getProfessionalBodies()(fakeRequestGetOrganisations))
       jsonBodyOf(result) shouldBe Json.toJson(organisations)
     }
   }
@@ -109,7 +109,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       val organisation = ProfessionalBody("bar")
       theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = true)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.addOrganisation(), req)
+      val result: Future[Result] = call(controller.addProfessionalBody(), req)
       status(result) shouldBe Status.OK
     }
 
@@ -117,13 +117,13 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       val organisation = ProfessionalBody("bar")
       theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = false)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.addOrganisation(), req)
+      val result: Future[Result] = call(controller.addProfessionalBody(), req)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400 when invalid org is added" in {
       val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"bar\"}"))
-      val result: Future[Result] = call(controller.addOrganisation(), req)
+      val result: Future[Result] = call(controller.addProfessionalBody(), req)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
@@ -134,7 +134,7 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       val organisation = ProfessionalBody("bar", Some("id"))
       theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = true)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
       status(result) shouldBe Status.OK
     }
 
@@ -142,13 +142,13 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
       val organisation = ProfessionalBody("bar", Some("id"))
       theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = false)
       val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400 when invalid org is sent to be removed" in {
       val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"barId\"}"))
-      val result: Future[Result] = call(controller.removeOrganisation(), req)
+      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
