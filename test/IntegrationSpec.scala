@@ -45,19 +45,18 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
   override protected def afterAll(): Unit = repo.drop
 
-  def callEndPoint(endpoint: String, method: String): Result = {
-    route(app, FakeRequest(method, s"/$endpoint")) match {
+  def callEndPoint(method: String): Result = {
+    route(app, FakeRequest(method, "/professionalBodies")) match {
       case Some(result) => await(result)
       case _ => fail()
     }
   }
 
-  def callEndPoint(endpoint: String, method: String, professionalBody: JsValue): Result =
-    route(app, FakeRequest(method, s"/$endpoint").withJsonBody(professionalBody)) match {
+  def callEndPoint(method: String, professionalBody: JsValue): Result =
+    route(app, FakeRequest(method, "/professionalBodies").withJsonBody(professionalBody)) match {
       case Some(result) => await(result)
       case _ => fail()
     }
-
 
   def sortedResult (result: Result): Seq[ProfessionalBody] = {
     jsonBodyOf(result).as[JsArray].value.map(_.toString().replaceAll("\"","")).sorted.map(organisation => ProfessionalBody(organisation))
@@ -65,7 +64,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
   "The App" should {
     "return the organisations as Json" in {
-      val result = await(callEndPoint("getProfessionalBodies", GET))
+      val result = await(callEndPoint(GET))
       status(result) shouldBe OK
       sortedResult(result).size shouldBe DefaultProfessionalBodies.load.size
     }
@@ -78,7 +77,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
           |{"name": "a new org that I added"}
         """.stripMargin)
 
-      val res = callEndPoint("addProfessionalBody", POST, org)
+      val res = callEndPoint(POST, org)
       status(res) shouldBe OK
       Thread.sleep(500)
 
@@ -94,23 +93,22 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
         s"""
            |{"fu": "bar"}
         """.stripMargin)
-      val res = callEndPoint("addProfessionalBody", POST, org)
+      val res = callEndPoint(POST, org)
       status(res) shouldBe BAD_REQUEST
     }
 
     "remove organisation from db" in {
-      val professionalBody = contentAsJson(callEndPoint("getProfessionalBodies", GET)).as[JsArray].value.head
+      val professionalBody = contentAsJson(callEndPoint(GET)).as[JsArray].value.head
       println(professionalBody)
 
       val professionalBodyName = (professionalBody \ "name").get
       println(professionalBodyName)
 
-      val res = await(callEndPoint("removeProfessionalBody", DELETE, professionalBody))
+      val res = await(callEndPoint(DELETE, professionalBody))
       status(res) shouldBe OK
 
       val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
       result.isEmpty shouldBe true
-
     }
   }
 }
