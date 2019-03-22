@@ -27,6 +27,8 @@ import play.api.libs.json.{Json, OFormat}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+//TODO at implemented by PBMR
+@Singleton
 trait ProfessionalBodiesRepository {
   def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
 
