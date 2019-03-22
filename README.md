@@ -10,21 +10,21 @@ This code is open source software licensed under the [Apache 2.0 License]("http:
 Start DataBase locally
 
 
-E.G. - for deleting a organisation
+E.G. - for deleting a Professional Body
 curl \
     --header "Content-type: application/json" \
     --request DELETE \
-    --data '{"name":"organisation"}' \
-    http://localhost:7401/removeOrganisation
+    --data '{"name":"professionalBody", "id":"validID"}' \
+    http://localhost:7401/removeProfessionalBody
 
-E.G. - for adding a organisation
+E.G. - for adding a Professional Body
 curl \
     --header "Content-type: application/json" \
     --request POST \
-    --data '{"name":"organisation"}' \
-    http://localhost:7401/addOrganisation
+    --data '{"name":"professionalBody"}' \
+    http://localhost:7401/addProfessionalBody
 
-E.G - for getting organisations
+E.G - for getting Professional Body
 curl \
     --request GET \
-    http://localhost:7401/organisations
+    http://localhost:7401/getProfessionalBodies

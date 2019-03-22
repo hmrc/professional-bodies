@@ -23,7 +23,6 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 @Singleton
 class HealthCheck extends BaseController{
-
   def getHealth = Action {
     Ok
   }

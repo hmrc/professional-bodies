@@ -52,8 +52,8 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
     }
   }
 
-  def callEndPoint(endpoint: String, method: String, org: JsValue): Result =
-    route(app, FakeRequest(method, s"/$endpoint").withJsonBody(org)) match {
+  def callEndPoint(endpoint: String, method: String, professionalBody: JsValue): Result =
+    route(app, FakeRequest(method, s"/$endpoint").withJsonBody(professionalBody)) match {
       case Some(result) => await(result)
       case _ => fail()
     }
@@ -99,16 +99,18 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
     }
 
     "remove organisation from db" in {
-      val source = contentAsJson(callEndPoint("getProfessionalBodies", GET)).as[Seq[ProfessionalBody]]
-      println(source)
-//      val json = Json.parse[ProfessionalBody](source)
-//      println(json)
+      val professionalBody = contentAsJson(callEndPoint("getProfessionalBodies", GET)).as[JsArray].value.head
+      println(professionalBody)
 
-/*      val res = await(callEndPoint("removeProfessionalBody", DELETE, json))
+      val professionalBodyName = (professionalBody \ "name").get
+      println(professionalBodyName)
+
+      val res = await(callEndPoint("removeProfessionalBody", DELETE, professionalBody))
       status(res) shouldBe OK
 
-      val result = repo.find("name" -> JsString(name))
-      result.isEmpty shouldBe true*/
+      val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
+      result.isEmpty shouldBe true
+
     }
   }
 }

@@ -42,7 +42,7 @@ class RepositorySpec
     override def mongoConnector: MongoConnector = mongoConnectorForTest
   }
 
-  val organisations = Seq(
+  val professionalBody = Seq(
     ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
     ProfessionalBody("Academic and Research Surgery Society of"),
     ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
@@ -50,10 +50,10 @@ class RepositorySpec
     ProfessionalBody("Access Consultants National Register of")
   )
 
-  val mongoOrganisations: Seq[MongoProfessionalBody] = organisations.map(organisation => MongoProfessionalBody(organisation.name))
+  val mongoProfessionalBody: Seq[MongoProfessionalBody] = professionalBody.map(organisation => MongoProfessionalBody(organisation.name))
 
   class MongoScenario(success: Boolean = true) {
-    val repository: ProfessionalBodiesMongoRepository = new ProfessionalBodiesMongoRepository(mongoComponent, mongoOrganisations) {
+    val repository: ProfessionalBodiesMongoRepository = new ProfessionalBodiesMongoRepository(mongoComponent, mongoProfessionalBody) {
       override def removeById(id: BSONObjectID, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult] = if (!success) {
         Future.successful(UpdateWriteResult(false, 0, 0, Seq.empty, Seq.empty, None, None, None))
       } else super.removeById(id, writeConcern)
@@ -71,7 +71,7 @@ class RepositorySpec
   "The repository" should {
     "return All the organisation" in new MongoScenario {
       whenReady(repository.findAllProfessionalBodies()) { res =>
-        res.map(_.name) shouldBe organisations.map(org => org.name)
+        res.map(_.name) shouldBe professionalBody.map(org => org.name)
       }
     }
 
