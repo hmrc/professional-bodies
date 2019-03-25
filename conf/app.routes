@@ -1,5 +1,4 @@
-# microservice specific routesorganisations
-
+# microservice specific routes
 
 GET         /            controllers.ProfessionalBodiesController.getProfessionalBodies
 
