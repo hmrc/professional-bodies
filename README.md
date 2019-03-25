@@ -15,16 +15,16 @@ curl \
     --header "Content-type: application/json" \
     --request DELETE \
     --data '{"name":"professionalBody", "id":"validID"}' \
-    http://localhost:7401/removeProfessionalBody
+    http://localhost:7401/professionalBodies
 
 E.G. - for adding a Professional Body
 curl \
     --header "Content-type: application/json" \
     --request POST \
     --data '{"name":"professionalBody"}' \
-    http://localhost:7401/addProfessionalBody
+    http://localhost:7401/professionalBodies
 
 E.G - for getting Professional Body
 curl \
     --request GET \
-    http://localhost:7401/getProfessionalBodies
+    http://localhost:7401/professionalBodies
