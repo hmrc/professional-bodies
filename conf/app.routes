@@ -1,10 +1,8 @@
 # microservice specific routesorganisations
 
 
-GET         /professionalBodies            controllers.ProfessionalBodiesController.getProfessionalBodies
-#deperacated
-GET         /organisations                 controllers.ProfessionalBodiesController.getProfessionalBodies
+GET         /            controllers.ProfessionalBodiesController.getProfessionalBodies
 
-POST        /professionalBodies            controllers.ProfessionalBodiesController.addProfessionalBody
+POST        /            controllers.ProfessionalBodiesController.addProfessionalBody
 
-DELETE      /professionalBodies            controllers.ProfessionalBodiesController.removeProfessionalBody
+DELETE      /            controllers.ProfessionalBodiesController.removeProfessionalBody
