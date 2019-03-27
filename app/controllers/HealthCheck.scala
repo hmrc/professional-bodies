@@ -20,10 +20,11 @@ import javax.inject.Singleton
 import play.api.mvc.Action
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-
 @Singleton
-class HealthCheck extends BaseController{
+class HealthCheck extends BaseController {
+
   def getHealth = Action {
     Ok
   }
+  
 }
