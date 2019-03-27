@@ -18,7 +18,6 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 import models.ProfessionalBody
-import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import repositories.ProfessionalBodiesRepository
@@ -28,8 +27,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class ProfessionalBodiesController @Inject()(repository: ProfessionalBodiesRepository)
-                                            (implicit val ec: ExecutionContext, val messagesApi: MessagesApi)
-  extends BaseController with I18nSupport {
+                                            (implicit val ec: ExecutionContext) extends BaseController {
 
   def getProfessionalBodies: Action[AnyContent] = Action.async { implicit request =>
     repository.findAllProfessionalBodies().map { organisations =>

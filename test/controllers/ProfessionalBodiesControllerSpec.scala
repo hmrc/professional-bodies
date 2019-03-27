@@ -43,7 +43,6 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
   val fakeRequestAddOrganisation = FakeRequest("POST", "/addOrganisation")
   val env: Environment = Environment.simple()
   val configuration: Configuration = Configuration.load(env)
-  implicit val messageApi = new DefaultMessagesApi(env, configuration, new DefaultLangs(configuration))
   val controller = new ProfessionalBodiesController(mockRepository)
   implicit val mat: Materializer = app.materializer
 
