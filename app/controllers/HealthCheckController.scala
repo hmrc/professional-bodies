@@ -17,14 +17,14 @@
 package controllers
 
 import javax.inject.Singleton
-import play.api.mvc.Action
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 @Singleton
-class HealthCheck extends BaseController {
+class HealthCheckController extends BaseController {
 
-  def getHealth = Action {
+  def status: Action[AnyContent] = Action {
     Ok
   }
-  
+
 }
