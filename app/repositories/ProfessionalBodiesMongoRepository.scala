@@ -16,6 +16,7 @@
 
 package repositories
 
+import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Named, Singleton}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.MultiBulkWriteResult
@@ -24,11 +25,11 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 import models.ProfessionalBody
 import play.api.libs.json.{Json, OFormat}
+
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-//TODO at implemented by PBMR
-@Singleton
+@ImplementedBy(classOf[ProfessionalBodiesMongoRepository])
 trait ProfessionalBodiesRepository {
   def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
 

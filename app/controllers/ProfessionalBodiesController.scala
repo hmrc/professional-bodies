@@ -17,19 +17,19 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
+import models.ProfessionalBody
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
+import repositories.ProfessionalBodiesRepository
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import models.ProfessionalBody
-import repositories.ProfessionalBodiesMongoRepository
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repository : ProfessionalBodiesMongoRepository)
-                                            (implicit val ec: ExecutionContext)
-                                                extends BaseController with I18nSupport {
+class ProfessionalBodiesController @Inject()(repository: ProfessionalBodiesRepository)
+                                            (implicit val ec: ExecutionContext, val messagesApi: MessagesApi)
+  extends BaseController with I18nSupport {
 
   def getProfessionalBodies: Action[AnyContent] = Action.async { implicit request =>
     repository.findAllProfessionalBodies().map { organisations =>
@@ -37,7 +37,7 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repos
     }
   }
 
-  def addProfessionalBody(): Action[ProfessionalBody] = Action.async (parse.json[ProfessionalBody]) { request =>
+  def addProfessionalBody(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
     repository.insertProfessionalBody(request.body).map {
       case false => InternalServerError
       case _ => Ok
@@ -51,9 +51,4 @@ class ProfessionalBodiesController @Inject()(val messagesApi: MessagesApi, repos
     }
   }
 
-//  def getAdminOrganisations: Action[AnyContent] = Action.async { implicit request =>
-//    repository.fetchOrganisationsAdmin().map { organisations =>
-//      Ok(toJson(organisations))
-//    }
-//  }
 }
