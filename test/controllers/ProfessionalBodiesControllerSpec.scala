@@ -16,37 +16,24 @@
 
 package controllers
 
-import akka.stream.Materializer
-import org.mockito.Mockito.when
-import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.Matchers
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.http.Status
-import play.api.i18n.{DefaultLangs, DefaultMessagesApi}
-import play.api.libs.json.Json
-import play.api.mvc.Result
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.test.UnitSpec
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
 import models.ProfessionalBody
-import repositories.{MongoProfessionalBody, ProfessionalBodiesMongoRepository}
+import org.scalatest.{MustMatchers, WordSpec}
+import play.api.http.Status
+import play.api.libs.json.{JsValue, Json}
+import play.api.test.FakeRequest
+import repositories.ProfessionalBodiesRepository
+import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
+class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
 
-  val mockRepository: ProfessionalBodiesMongoRepository = mock[ProfessionalBodiesMongoRepository]
-  val fakeRequestGetOrganisations = FakeRequest("GET", "/organisations")
-  val fakeRequestAddOrganisation = FakeRequest("POST", "/addOrganisation")
-  val env: Environment = Environment.simple()
-  val configuration: Configuration = Configuration.load(env)
-  val controller = new ProfessionalBodiesController(mockRepository)
-  implicit val mat: Materializer = app.materializer
+  implicit val mat: Materializer = ActorMaterializer()(ActorSystem())
 
-  val organisations = Seq(
+  val defaultProfessionalBodies: Seq[ProfessionalBody] = Seq(
     ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
     ProfessionalBody("Academic and Research Surgery Society of"),
     ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
@@ -54,101 +41,82 @@ class ProfessionalBodiesControllerSpec extends UnitSpec with Matchers with Guice
     ProfessionalBody("Access Consultants National Register of")
   )
 
-  val mongoOrgs: Seq[MongoProfessionalBody] = organisations.map(org => MongoProfessionalBody(org.name))
+  val professionalBodyJson: JsValue = Json.toJson(defaultProfessionalBodies.head)
 
-  def theRepoWillReturnSomeOrganisations: OngoingStubbing[Future[Seq[ProfessionalBody]]] = {
-    when(mockRepository.findAllProfessionalBodies()).thenReturn(Future.successful(organisations))
+  val defaultMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
+
+    override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(defaultProfessionalBodies)
+
+    override def insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean] = Future.successful(true)
+
+    override def removeProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean] = Future.successful(true)
+
   }
 
-/*  def theRepoWillReturnSomeAdminOrganisations: OngoingStubbing[Future[Seq[MongoOrganisation]]] = {
-    when(mockRepository.fetchOrganisationsAdmin()).thenReturn(Future.successful(mongoOrgs))
-  }*/
+  val failingMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
 
-  def theRepoWillReturnBooleanWhenAddingOrgs(organisation: ProfessionalBody, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockRepository.insertProfessionalBody(organisation)).thenReturn(Future.successful(boolean))
+    override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(Seq.empty)
+
+    override def insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean] = Future.successful(false)
+
+    override def removeProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean] = Future.successful(false)
+
   }
 
-  def theRepoWillReturnBooleanWhenDeletingOrgs(organisation: ProfessionalBody, boolean: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockRepository.removeProfessionalBody(organisation)).thenReturn(Future.successful(boolean))
+  val req = FakeRequest()
+
+  class scenario(repo: ProfessionalBodiesRepository = defaultMockRepo) {
+    val controller = new ProfessionalBodiesController(repo)
   }
 
+  "list" should {
 
-  "GET /" should {
-    "return 200" in {
-      theRepoWillReturnSomeOrganisations
-      val result = controller.getProfessionalBodies()(fakeRequestGetOrganisations)
-      status(result) shouldBe Status.OK
+    "return status 200" in new scenario {
+      status(call(controller.getProfessionalBodies, req)) must be(Status.OK)
     }
 
-    "return the list of organisations names" in {
-      theRepoWillReturnSomeOrganisations
-      val result = await(controller.getProfessionalBodies()(fakeRequestGetOrganisations))
-      jsonBodyOf(result) shouldBe Json.toJson(organisations)
+    "return professional bodies as JSON" in new scenario {
+      contentAsJson(call(controller.getProfessionalBodies, req)) must be(Json.toJson(defaultProfessionalBodies))
     }
+
   }
 
-/*  "GET /adminOrganisations" should {
+  "add" should {
 
-    "return 200" in {
-      theRepoWillReturnSomeAdminOrganisations
-      val result = controller.getAdminOrganisations()(fakeRequestGetOrganisations)
-      status(result) shouldBe Status.OK
+    "return status 200" in new scenario {
+      status(call(controller.addProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.OK)
     }
 
-    "return the list of organisations" in {
-      theRepoWillReturnSomeAdminOrganisations
-      val result = await(controller.getAdminOrganisations()(fakeRequestGetOrganisations))
-      jsonBodyOf(result) shouldBe Json.toJson(mongoOrgs)
-    }
-  }*/
-
-  "POST /addOrganisation" should {
-
-    "return 200" in {
-      val organisation = ProfessionalBody("bar")
-      theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = true)
-      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.addProfessionalBody(), req)
-      status(result) shouldBe Status.OK
+    "return status 500 when repo cannot save professional body" in new scenario(failingMockRepo) {
+      status(call(controller.addProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.INTERNAL_SERVER_ERROR)
     }
 
-    "return 500 when repo returns false on being unable to add valid Org" in {
-      val organisation = ProfessionalBody("bar")
-      theRepoWillReturnBooleanWhenAddingOrgs(organisation, boolean = false)
-      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.addProfessionalBody(), req)
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    "return status 400 given invalid professional body" in new scenario {
+      status(call(controller.addProfessionalBody(), req.withJsonBody(Json.parse(
+        """
+          |{"foo":"bar"}
+        """.stripMargin)))) must be(Status.BAD_REQUEST)
     }
 
-    "return 400 when invalid org is added" in {
-      val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"bar\"}"))
-      val result: Future[Result] = call(controller.addProfessionalBody(), req)
-      status(result) shouldBe Status.BAD_REQUEST
-    }
   }
 
-  "DELETE /removeOrganisation" should {
+  "remove" should {
 
-    "return 200" in {
-      val organisation = ProfessionalBody("bar", Some("id"))
-      theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = true)
-      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
-      status(result) shouldBe Status.OK
+    "return status 200" in new scenario {
+      status(call(controller.removeProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.OK)
     }
 
-    "return 500 when repo returns false on being unable to remove valid Org" in {
-      val organisation = ProfessionalBody("bar", Some("id"))
-      theRepoWillReturnBooleanWhenDeletingOrgs(organisation, boolean = false)
-      val req = FakeRequest().withJsonBody(Json.toJson(organisation))
-      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    "return status 500 when repo cannot save professional body" in new scenario(failingMockRepo) {
+      status(call(controller.removeProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.INTERNAL_SERVER_ERROR)
     }
 
-    "return 400 when invalid org is sent to be removed" in {
-      val req = FakeRequest().withJsonBody(Json.toJson("{\"fu\":\"barId\"}"))
-      val result: Future[Result] = call(controller.removeProfessionalBody(), req)
-      status(result) shouldBe Status.BAD_REQUEST
+    "return status 400 given invalid professional body" in new scenario {
+      status(call(controller.removeProfessionalBody(), req.withJsonBody(Json.parse(
+        """
+          |{"foo":"bar"}
+        """.stripMargin)))) must be(Status.BAD_REQUEST)
     }
+
   }
+
 }

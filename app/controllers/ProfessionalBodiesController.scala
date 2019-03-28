@@ -38,14 +38,14 @@ class ProfessionalBodiesController @Inject()(repository: ProfessionalBodiesRepos
   def addProfessionalBody(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
     repository.insertProfessionalBody(request.body).map {
       case false => InternalServerError
-      case _ => Ok
+      case _ => Ok // TODO add should return 201 or 202 rather than 200
     }
   }
 
   def removeProfessionalBody(): Action[ProfessionalBody] = Action.async(parse.json[ProfessionalBody]) { request =>
     repository.removeProfessionalBody(request.body).map {
       case false => InternalServerError
-      case _ => Ok
+      case _ => Ok // TODO add should return 202 rather than 200
     }
   }
 
