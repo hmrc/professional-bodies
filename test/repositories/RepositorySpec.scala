@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package repository
+package repositories
 
+import models.ProfessionalBody
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
 import play.api.libs.json.JsString
@@ -24,8 +25,6 @@ import reactivemongo.api.commands.{UpdateWriteResult, WriteConcern, WriteResult}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
-import models.ProfessionalBody
-import repositories.{MongoProfessionalBody, ProfessionalBodiesMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

@@ -16,26 +16,24 @@
 
 package repositories
 
-
 import javax.inject.{Inject, Named}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.MultiBulkWriteResult
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.lock.LockMongoRepository
-import scala.concurrent.duration._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
-class AddProfessionalBodiesJob @Inject()(mongo: ReactiveMongoComponent) {
+class AddProfessionalBodiesJob @Inject()(@Named("professionalBodies") professionalBodies: Seq[MongoProfessionalBody],
+                                         professionalBodiesRepository: ProfessionalBodiesRepository,
+                                         dataMigrationRepository: DataMigrationRepository,
+                                         runAutomatically: Boolean = true)(implicit val ec: ExecutionContext) {
 
-  val repo = LockMongoRepository(mongo.mongoConnector.db)
-
-  object AddProfessionalBodies @Inject()(mongo: ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoProfessionalBody])(implicit val ec: ExecutionContext)
-    extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats){
-    def run: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
-    run
+  def run(): Future[Boolean] = {
+    dataMigrationRepository.countDataMigrations().flatMap { count =>
+      if (count < 1) {
+        professionalBodiesRepository.insertProfessionalBodies(professionalBodies).flatMap { bool =>
+          if (bool) dataMigrationRepository.insertDataMigration(DataMigration(1, System.currentTimeMillis())) else Future.successful(false)
+        }
+      } else Future.successful(false)
+    }
   }
-  AddProfessionalBodies.
+
+  if (runAutomatically) run()
 }

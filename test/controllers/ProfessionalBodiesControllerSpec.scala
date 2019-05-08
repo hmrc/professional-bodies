@@ -23,7 +23,7 @@ import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
-import repositories.ProfessionalBodiesRepository
+import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
 import play.api.test.Helpers._
 
 import scala.concurrent.Future
@@ -44,6 +44,10 @@ class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
   val professionalBodyJson: JsValue = Json.toJson(defaultProfessionalBodies.head)
 
   val defaultMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
+    var professionalBodies: Seq[ProfessionalBody] = null
+    override def insertProfessionalBodies(professionalBodiesToInsert: Seq[MongoProfessionalBody]): Future[Boolean] = {
+      Future.successful(true)
+    }
 
     override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(defaultProfessionalBodies)
 
@@ -54,6 +58,10 @@ class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
   }
 
   val failingMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
+    var professionalBodies: Seq[ProfessionalBody] = null
+    override def insertProfessionalBodies(professionalBodiesToInsert: Seq[MongoProfessionalBody]): Future[Boolean] = {
+      Future.successful(true)
+    }
 
     override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(Seq.empty)
 

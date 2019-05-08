@@ -29,16 +29,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[ProfessionalBodiesMongoRepository])
 trait ProfessionalBodiesRepository {
+
+  def insertProfessionalBodies(professionalBodies: Seq[MongoProfessionalBody]): Future[Boolean]
   def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
-
   def insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
-
   def removeProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
 }
 
 @Singleton
 class ProfessionalBodiesMongoRepository @Inject()(mongo: ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoProfessionalBody])(implicit val ec: ExecutionContext)
-  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats) with ProfessionalBodiesRepository {
+  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats)
+    with ProfessionalBodiesRepository {
+
+  //TODO write tests
+  def insertProfessionalBodies(professionalBodies: Seq[MongoProfessionalBody]): Future[Boolean] = bulkInsert(professionalBodies).map { res =>
+    if (!res.ok) {
+      throw new IllegalStateException("Write to repository unsuccessful")
+    } else res.ok
+  }
 
   override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = {
     findAll().map(result => result.map(found => ProfessionalBody(found.name, Some(found._id.stringify))))
