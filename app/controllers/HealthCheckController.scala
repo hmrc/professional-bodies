@@ -16,15 +16,18 @@
 
 package controllers
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent}
+import repositories.DataMigrationRepository
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 @Singleton
-class HealthCheckController extends BaseController {
-
+class HealthCheckController @Inject()(dataMigrationRepository: DataMigrationRepository) extends BaseController {
   def status: Action[AnyContent] = Action {
-    Ok
+    dataMigrationRepository.countDataMigrations().flatMap{
+      if (_) {
+        Ok
+      }
+    }
   }
-
 }

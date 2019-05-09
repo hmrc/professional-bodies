@@ -41,16 +41,3 @@ import scala.concurrent.Future
     val professionalBodiesRepository: MockProfessionalBodiesRepository = new MockProfessionalBodiesRepository(insertPBToMongoSuccess)
     val scheduledJob = new AddProfessionalBodiesJob(mongoProfessionalBody, professionalBodiesRepository, populateTagCollection, false)
   }
-
-  class DataMigrationScenario (){
-    val professionalBodies = Seq(
-      ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
-      ProfessionalBody("Academic and Research Surgery Society of"),
-      ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
-      ProfessionalBody("Academic Primary Care Society for"),
-      ProfessionalBody("Access Consultants National Register of")
-    )
-    val mongoProfessionalBody: Seq[MongoProfessionalBody] = professionalBodies.map(organisation => MongoProfessionalBody(organisation.name))
-
-
-  }

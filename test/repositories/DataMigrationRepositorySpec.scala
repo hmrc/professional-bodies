@@ -1,46 +1,65 @@
 package repositories
 
-import models.ProfessionalBody
-import org.scalatest.{MustMatchers, WordSpec}
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest._
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{UpdateWriteResult, WriteConcern, WriteResult}
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.MongoConnector
+import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
-import scala.concurrent.{ExecutionContext, Future}
-
-class DataMigrationRepositorySpec extends WordSpec with MustMatchers with ScalaFutures{
+class DataMigrationRepositorySpec extends WordSpec
+                                  with MustMatchers
+                                  with ScalaFutures
+                                  with MongoSpecSupport
+                                  with IntegrationPatience
+                                  with BeforeAndAfterEach{
 
   "countDataMigrations" should {
-    "tell me if the repository is populated" in {
-      WriteResult must be(0)
+    "tell me if the repository is empty" in {
+      //initially no dataMigration present.
+      whenReady(dataMigrationMongoRepository.countDataMigrations()) { res: Int =>
+        res must be(0)
+      }
+    }
 
+    "tell me if the repository is populated" in {
+      whenReady(dataMigrationMongoRepository.insert(DataMigration(1, System.currentTimeMillis()))){ res =>
+        if (res.ok) {
+          whenReady(dataMigrationMongoRepository.countDataMigrations()) { res: Int =>
+            res must be(1)
+          }
+        }
+      }
     }
   }
 
   "insertDataMigration" should {
-    "tell me if the repository is populated" in {
-      WriteResult must be(0)
+    val dataMigration = new DataMigration(1, System.currentTimeMillis())
+    "insert a dataMigration" in {
+      whenReady(dataMigrationMongoRepository.insertDataMigration(dataMigration)){ res =>
+        res must be(true)
+        whenReady(dataMigrationMongoRepository.findAll()){ res =>
+          res must be(Seq(dataMigration))
+        }
+      }
+    }
 
+    "return Future[false] on write failure" in {
+      val stubbedRepo = new DataMigrationMongoRepository(mongoComponent){
+        override def insertDataMigration(migration: DataMigration): Future[Boolean] = Future.successful(false)
+      }
+      whenReady(stubbedRepo.insertDataMigration(dataMigration)){ res =>
+        res must be(false)
+        whenReady(stubbedRepo.findAll()){ res =>
+          res must be(Seq.empty)
+        }
+      }
     }
   }
 
+  val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {override def mongoConnector: MongoConnector = mongoConnectorForTest}
+  val dataMigrationMongoRepository: DataMigrationMongoRepository = new DataMigrationMongoRepository(mongoComponent)
 
-
-  class MongoScenario(success: Boolean = true) {
-    val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {override def mongoConnector: MongoConnector = mongoConnectorForTest}
-
-    val professionalBody = Seq(
-      ProfessionalBody("AABC Register Ltd (Architects accredited in building conservation),from year 2016 to 2017"),
-      ProfessionalBody("Academic and Research Surgery Society of"),
-      ProfessionalBody("Academic Gaming and Simulation in Education and Training Society for"),
-      ProfessionalBody("Academic Primary Care Society for"),
-      ProfessionalBody("Access Consultants National Register of")
-    )
-
-    val mongoProfessionalBody: Seq[MongoProfessionalBody] = professionalBody.map(organisation => MongoProfessionalBody(organisation.name))
-    
-  }
-
+  override def beforeEach(): Unit = Await.result(dataMigrationMongoRepository.drop, Duration(100, "millis"))
 }

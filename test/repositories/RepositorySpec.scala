@@ -74,12 +74,6 @@ class RepositorySpec
       }
     }
 
-/*    "return all mongoOrganisations" in new MongoScenario {
-      whenReady(repository.fetchOrganisationsAdmin()) { res =>
-        res shouldBe mongoOrganisations
-      }
-    }*/
-
     "add organisation to db" in new MongoScenario {
       val name = "this is definitely a new org"
       val res: Boolean = repository.insertProfessionalBody(ProfessionalBody(name)).futureValue

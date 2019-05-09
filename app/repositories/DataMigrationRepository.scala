@@ -21,9 +21,9 @@ class DataMigrationMongoRepository @Inject()(mongo: ReactiveMongoComponent)(impl
   extends ReactiveRepository[DataMigration, BSONObjectID]("dataMigrations", mongo.mongoConnector.db, DataMigration.formatOrganisation, objectIdFormats)
     with DataMigrationRepository {
 
-  override def insertDataMigration(migration: DataMigration): Future[Boolean] = ???
+  override def insertDataMigration(migration: DataMigration): Future[Boolean] = insert(migration).map(res => res.ok)
 
-  override def countDataMigrations(): Future[Int] = ???
+  override def countDataMigrations(): Future[Int] = count
 }
 case class DataMigration(version: Int, timestamp: Long, _id: BSONObjectID = BSONObjectID.generate())
 
