@@ -66,13 +66,13 @@ class RepositorySpec
   }
 
   override def afterAll(): Unit = new MongoScenario { await(repository.drop) }
-
+//repository no longer inserts organisations
   "The repository" should {
-    "return All the organisation" in new MongoScenario {
+/*    "return All the organisation" in new MongoScenario {
       whenReady(repository.findAllProfessionalBodies()) { res =>
         res.map(_.name) shouldBe professionalBody.map(org => org.name)
       }
-    }
+    }*/
 
     "add organisation to db" in new MongoScenario {
       val name = "this is definitely a new org"
