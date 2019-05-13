@@ -21,9 +21,9 @@ import javax.inject.{Inject, Named}
 import scala.concurrent.{ExecutionContext, Future}
 
 class AddProfessionalBodiesJob @Inject()(@Named("professionalBodies") professionalBodies: Seq[MongoProfessionalBody],
+                                         @Named("runAutomatically") runAutomatically: Boolean,
                                          professionalBodiesRepository: ProfessionalBodiesRepository,
-                                         dataMigrationRepository: DataMigrationRepository,
-                                         runAutomatically: Boolean = true)(implicit val ec: ExecutionContext) {
+                                         dataMigrationRepository: DataMigrationRepository)(implicit val ec: ExecutionContext) {
 
   def run(): Future[Boolean] = {
     dataMigrationRepository.countDataMigrations().flatMap { count =>

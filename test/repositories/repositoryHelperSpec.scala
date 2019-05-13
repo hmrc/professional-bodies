@@ -55,5 +55,5 @@ import scala.concurrent.Future
     val mongoProfessionalBody: Seq[MongoProfessionalBody] = professionalBodies.map(organisation => MongoProfessionalBody(organisation.name))
     val populateTagCollection: MockDataMigrationRepository = new MockDataMigrationRepository()
     val professionalBodiesRepository: MockProfessionalBodiesRepository = new MockProfessionalBodiesRepository(insertPBToMongoSuccess)
-    val scheduledJob = new AddProfessionalBodiesJob(mongoProfessionalBody, professionalBodiesRepository, populateTagCollection, false)
+    val scheduledJob = new AddProfessionalBodiesJob(mongoProfessionalBody, false ,professionalBodiesRepository, populateTagCollection)
   }

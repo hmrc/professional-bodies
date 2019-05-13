@@ -41,5 +41,8 @@ class Module extends AbstractModule {
     DefaultProfessionalBodies.load.map(organisation => MongoProfessionalBody.apply(organisation.name))
   }
 
+  @Provides @Singleton @Named("runAutomatically")
+  def runAutomatically(): Boolean = true
+
   override def configure(): Unit = bind(classOf[AddProfessionalBodiesJob]).asEagerSingleton()
 }

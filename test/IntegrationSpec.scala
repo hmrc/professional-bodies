@@ -65,6 +65,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
   "The App" should {
     "return the organisations as Json" in {
       val result = await(callEndPoint(GET))
+      Thread.sleep(10000)
       status(result) shouldBe OK
       sortedResult(result).size shouldBe DefaultProfessionalBodies.load.size
     }
@@ -78,7 +79,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
         """.stripMargin)
 
       val res = callEndPoint(POST, org)
-      status(res) shouldBe OK
+      status(res) shouldBe CREATED
       Thread.sleep(500)
 
       val inserted = repo.findAll().futureValue
@@ -105,7 +106,7 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
       println(professionalBodyName)
 
       val res = await(callEndPoint(DELETE, professionalBody))
-      status(res) shouldBe OK
+      status(res) shouldBe ACCEPTED
 
       val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
       result.isEmpty shouldBe true
