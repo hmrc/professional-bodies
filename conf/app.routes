@@ -2,6 +2,6 @@
 
 GET         /            controllers.ProfessionalBodiesController.getProfessionalBodies
 
-POST        /            controllers.ProfessionalBodiesController.addProfessionalBody
+#POST        /            controllers.ProfessionalBodiesController.addProfessionalBody
 
-DELETE      /            controllers.ProfessionalBodiesController.removeProfessionalBody
+#DELETE      /            controllers.ProfessionalBodiesController.removeProfessionalBody

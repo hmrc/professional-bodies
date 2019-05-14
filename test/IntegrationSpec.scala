@@ -26,7 +26,7 @@ import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.ProfessionalBodiesMongoRepository
+import repositories.{DataMigration, DataMigrationMongoRepository, ProfessionalBodiesMongoRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
@@ -43,22 +43,21 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
   val repo: ProfessionalBodiesMongoRepository = app.injector.instanceOf[ProfessionalBodiesMongoRepository]
+  val dataMigrationRepo: DataMigrationMongoRepository = app.injector.instanceOf[DataMigrationMongoRepository]
 
   override protected def beforeAll(): Unit = {
     repo.drop
+    dataMigrationRepo.drop
     eventually {
       status(route(app, FakeRequest("GET", "/admin/health")).get) should be(Status.OK)
     }
   }
 
-  override protected def afterAll(): Unit = repo.drop
-
-  def callEndPoint(method: String): Result = {
+  def callEndPoint(method: String): Result =
     route(app, FakeRequest(method, "/professionalBodies")) match {
       case Some(result) => await(result)
       case _ => fail()
     }
-  }
 
   def callEndPoint(method: String, professionalBody: JsValue): Result =
     route(app, FakeRequest(method, "/professionalBodies").withJsonBody(professionalBody)) match {
@@ -117,6 +116,9 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
       val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
       result.isEmpty shouldBe true
+//dirty hack
+      dataMigrationRepo.drop
+      repo.drop
     }
   }
 }
