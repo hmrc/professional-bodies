@@ -16,6 +16,7 @@ lazy val microservice = Project(appName, file("."))
 libraryDependencies ++= Seq(
   "uk.gov.hmrc"             %% "bootstrap-play-25"        % "4.9.0",
   "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.12.0-play-25",
+  "uk.gov.hmrc"             %% "mongo-lock"               % "6.12.0-play-25",
 
   "org.scalatest"           %% "scalatest"                % "3.0.4"                 % "test",
   "com.typesafe.play"       %% "play-test"                % current                 % "test",

@@ -23,9 +23,8 @@ import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
-import repositories.ProfessionalBodiesRepository
+import repositories.{MongoProfessionalBody, ProfessionalBodiesRepository}
 import play.api.test.Helpers._
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -44,6 +43,10 @@ class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
   val professionalBodyJson: JsValue = Json.toJson(defaultProfessionalBodies.head)
 
   val defaultMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
+    var professionalBodies: Seq[ProfessionalBody] = null
+    override def insertProfessionalBodies(professionalBodiesToInsert: Seq[MongoProfessionalBody]): Future[Boolean] = {
+      Future.successful(true)
+    }
 
     override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(defaultProfessionalBodies)
 
@@ -54,6 +57,10 @@ class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
   }
 
   val failingMockRepo: ProfessionalBodiesRepository = new ProfessionalBodiesRepository {
+    var professionalBodies: Seq[ProfessionalBody] = null
+    override def insertProfessionalBodies(professionalBodiesToInsert: Seq[MongoProfessionalBody]): Future[Boolean] = {
+      Future.successful(true)
+    }
 
     override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = Future.successful(Seq.empty)
 
@@ -70,53 +77,41 @@ class ProfessionalBodiesControllerSpec extends WordSpec with MustMatchers {
   }
 
   "list" should {
-
     "return status 200" in new scenario {
       status(call(controller.getProfessionalBodies, req)) must be(Status.OK)
     }
-
     "return professional bodies as JSON" in new scenario {
       contentAsJson(call(controller.getProfessionalBodies, req)) must be(Json.toJson(defaultProfessionalBodies))
     }
-
   }
 
   "add" should {
-
     "return status 200" in new scenario {
-      status(call(controller.addProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.OK)
+      status(call(controller.addProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.CREATED)
     }
-
     "return status 500 when repo cannot save professional body" in new scenario(failingMockRepo) {
       status(call(controller.addProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.INTERNAL_SERVER_ERROR)
     }
-
     "return status 400 given invalid professional body" in new scenario {
       status(call(controller.addProfessionalBody(), req.withJsonBody(Json.parse(
         """
           |{"foo":"bar"}
         """.stripMargin)))) must be(Status.BAD_REQUEST)
     }
-
   }
 
   "remove" should {
-
     "return status 200" in new scenario {
-      status(call(controller.removeProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.OK)
+      status(call(controller.removeProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.ACCEPTED)
     }
-
     "return status 500 when repo cannot save professional body" in new scenario(failingMockRepo) {
       status(call(controller.removeProfessionalBody(), req.withJsonBody(professionalBodyJson))) must be(Status.INTERNAL_SERVER_ERROR)
     }
-
     "return status 400 given invalid professional body" in new scenario {
       status(call(controller.removeProfessionalBody(), req.withJsonBody(Json.parse(
         """
           |{"foo":"bar"}
         """.stripMargin)))) must be(Status.BAD_REQUEST)
     }
-
   }
-
 }

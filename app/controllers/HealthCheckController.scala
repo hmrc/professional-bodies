@@ -16,15 +16,23 @@
 
 package controllers
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent}
+import repositories.{DataMigration, DataMigrationRepository}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
-class HealthCheckController extends BaseController {
-
-  def status: Action[AnyContent] = Action {
-    Ok
+class HealthCheckController @Inject()(dataMigrationRepository: DataMigrationRepository)
+                                     (implicit val ec: ExecutionContext) extends BaseController {
+  def status: Action[AnyContent] = Action.async { implicit req =>
+    dataMigrationRepository.countDataMigrations().map { count =>
+      if (count > 0) {
+        Ok
+      } else {
+        InternalServerError
+      }
+    }
   }
-
 }

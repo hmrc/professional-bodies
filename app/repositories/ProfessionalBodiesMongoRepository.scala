@@ -18,32 +18,35 @@ package repositories
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Named, Singleton}
+import models.ProfessionalBody
+import play.api.libs.json.{Json, OFormat}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.MultiBulkWriteResult
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
-import models.ProfessionalBody
-import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[ProfessionalBodiesMongoRepository])
 trait ProfessionalBodiesRepository {
+
+  def insertProfessionalBodies(professionalBodies: Seq[MongoProfessionalBody]): Future[Boolean]
   def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]]
-
   def insertProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
-
   def removeProfessionalBody(professionalBody: ProfessionalBody): Future[Boolean]
 }
 
 @Singleton
 class ProfessionalBodiesMongoRepository @Inject()(mongo: ReactiveMongoComponent, @Named("professionalBodies") organisations: Seq[MongoProfessionalBody])(implicit val ec: ExecutionContext)
-  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats) with ProfessionalBodiesRepository {
+  extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats)
+    with ProfessionalBodiesRepository {
 
-  // TODO move data insertion into scheduled task
-  val res: MultiBulkWriteResult = Await.result(drop.flatMap(_ => bulkInsert(organisations)), 30 seconds)
+  //TODO write tests
+  def insertProfessionalBodies(professionalBodies: Seq[MongoProfessionalBody]): Future[Boolean] = bulkInsert(professionalBodies).map { res =>
+    if (!res.ok) {
+      throw new IllegalStateException("Write to repository unsuccessful")
+    } else res.ok
+  }
 
   override def findAllProfessionalBodies(): Future[Seq[ProfessionalBody]] = {
     findAll().map(result => result.map(found => ProfessionalBody(found.name, Some(found._id.stringify))))

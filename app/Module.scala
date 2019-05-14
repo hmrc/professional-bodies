@@ -32,15 +32,17 @@
 
 import com.google.inject.{AbstractModule, Provides}
 import javax.inject.{Named, Singleton}
-import repositories.MongoProfessionalBody
+import repositories.{AddProfessionalBodiesJob, MongoProfessionalBody}
 
 class Module extends AbstractModule {
 
   @Provides @Singleton @Named("professionalBodies")
   def professionalBodies(): Seq[MongoProfessionalBody] = {
     DefaultProfessionalBodies.load.map(organisation => MongoProfessionalBody.apply(organisation.name))
-
   }
 
-  override def configure(): Unit = {}
+  @Provides @Singleton @Named("runAutomatically")
+  def runAutomatically(): Boolean = true
+
+  override def configure(): Unit = bind(classOf[AddProfessionalBodiesJob]).asEagerSingleton()
 }

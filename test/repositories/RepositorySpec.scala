@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package repository
+package repositories
 
+import models.ProfessionalBody
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
 import play.api.libs.json.JsString
@@ -24,8 +25,6 @@ import reactivemongo.api.commands.{UpdateWriteResult, WriteConcern, WriteResult}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
-import models.ProfessionalBody
-import repositories.{MongoProfessionalBody, ProfessionalBodiesMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -67,17 +66,11 @@ class RepositorySpec
   }
 
   override def afterAll(): Unit = new MongoScenario { await(repository.drop) }
-
+//repository no longer inserts organisations
   "The repository" should {
-    "return All the organisation" in new MongoScenario {
+/*    "return All the organisation" in new MongoScenario {
       whenReady(repository.findAllProfessionalBodies()) { res =>
         res.map(_.name) shouldBe professionalBody.map(org => org.name)
-      }
-    }
-
-/*    "return all mongoOrganisations" in new MongoScenario {
-      whenReady(repository.fetchOrganisationsAdmin()) { res =>
-        res shouldBe mongoOrganisations
       }
     }*/
 
