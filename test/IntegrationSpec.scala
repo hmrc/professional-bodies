@@ -16,7 +16,7 @@
 
 import akka.stream.Materializer
 import models.ProfessionalBody
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -26,12 +26,12 @@ import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.{DataMigration, DataMigrationMongoRepository, ProfessionalBodiesMongoRepository}
+import repositories.{DataMigrationMongoRepository, ProfessionalBodiesMongoRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
 
-class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures with Eventually with IntegrationPatience {
+class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures with Eventually with IntegrationPatience with SequentialNestedSuiteExecution {
 
   implicit override lazy val app: Application = GuiceApplicationBuilder().configure(
     "auditing.enabled" -> false,
@@ -45,19 +45,16 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
   val repo: ProfessionalBodiesMongoRepository = app.injector.instanceOf[ProfessionalBodiesMongoRepository]
   val dataMigrationRepo: DataMigrationMongoRepository = app.injector.instanceOf[DataMigrationMongoRepository]
 
-  override protected def beforeAll(): Unit = {
-    repo.drop
-    dataMigrationRepo.drop
-    eventually {
-      status(route(app, FakeRequest("GET", "/admin/health")).get) should be(Status.OK)
-    }
+  override protected def beforeAll(): Unit = eventually {
+    status(route(app, FakeRequest("GET", "/admin/health")).get) should be(Status.OK)
   }
 
-  def callEndPoint(method: String): Result =
+  def callEndPoint(method: String): Result = {
     route(app, FakeRequest(method, "/professionalBodies")) match {
       case Some(result) => await(result)
       case _ => fail()
     }
+  }
 
   def callEndPoint(method: String, professionalBody: JsValue): Result =
     route(app, FakeRequest(method, "/professionalBodies").withJsonBody(professionalBody)) match {
@@ -116,9 +113,16 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
       val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
       result.isEmpty shouldBe true
-//dirty hack
-      dataMigrationRepo.drop
-      repo.drop
+    }
+
+    // hack!! we use sequential nested suite execution and clean up here because Play Mongo has shutdown when "afterAll" is called
+    // the alternative is to establish our own mongo connection in "afterAll" drop collections directly
+    "clean up after itself" in {
+      whenReady(repo.drop) { professionalBodiesDropped =>
+        whenReady(dataMigrationRepo.drop) { dataMigrationsDropped =>
+          (professionalBodiesDropped && dataMigrationsDropped) should be(true)
+        }
+      }
     }
   }
 }
