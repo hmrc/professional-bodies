@@ -28,10 +28,9 @@ class HealthCheckController @Inject()(dataMigrationRepository: DataMigrationRepo
                                      (implicit val ec: ExecutionContext) extends BaseController {
   def status: Action[AnyContent] = Action.async { implicit req =>
     dataMigrationRepository.countDataMigrations().map { count =>
-      if (count == 1) {
+      if (count > 0) {
         Ok
       } else {
-        dataMigrationRepository.insertDataMigration(DataMigration(1, System.currentTimeMillis()))
         InternalServerError
       }
     }

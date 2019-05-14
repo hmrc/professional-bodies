@@ -18,6 +18,7 @@ package controllers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import play.api.http.Status
 import play.api.test.FakeRequest
@@ -27,27 +28,37 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class HealthCheckControllerSpec extends WordSpec with MustMatchers {
+class HealthCheckControllerSpec extends WordSpec with MustMatchers with ScalaFutures {
+
   implicit val mat: ActorMaterializer = ActorMaterializer()(ActorSystem())
+
   val req = FakeRequest()
-  val repo: DataMigrationRepository = new DataMigrationRepository(){
+
+  val repo: DataMigrationRepository = new DataMigrationRepository() {
+
     var count: Int = 0
+
     override def countDataMigrations(): Future[Int] = Future.successful(count)
+
     override def insertDataMigration(migration: DataMigration): Future[Boolean] = {
       count = count + 1
       Future.successful(true)
     }
   }
+
   val healthController = new HealthCheckController(repo)
 
   "status" should {
+
     "return 500 initially" in {
       status(call(healthController.status, req)) must be(Status.INTERNAL_SERVER_ERROR)
     }
-    "return Ok when insert is initially" in {
-      Thread.sleep(200)
-      status(call(healthController.status, req)) must be(Status.OK)
 
+    "return Ok when insert is initially" in {
+      whenReady(repo.insertDataMigration(DataMigration(1, System.currentTimeMillis()))) { _ =>
+        status(call(healthController.status, req)) must be(Status.OK)
+      }
     }
+
   }
 }

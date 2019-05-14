@@ -17,6 +17,7 @@
 package repositories
 
 import javax.inject.{Inject, Named}
+import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,12 +27,24 @@ class AddProfessionalBodiesJob @Inject()(@Named("professionalBodies") profession
                                          dataMigrationRepository: DataMigrationRepository)(implicit val ec: ExecutionContext) {
 
   def run(): Future[Boolean] = {
+    Logger.debug("Running add professional bodies job")
     dataMigrationRepository.countDataMigrations().flatMap { count =>
       if (count < 1) {
+        Logger.debug("Data migration not completed. Adding professional bodies to Mongo.")
         professionalBodiesRepository.insertProfessionalBodies(professionalBodies).flatMap { bool =>
-          if (bool) dataMigrationRepository.insertDataMigration(DataMigration(1, System.currentTimeMillis())) else Future.successful(false)
+          if (bool) {
+            Logger.debug("Professional bodies successfully added to Mongo. Inserting data migration.")
+            dataMigrationRepository.insertDataMigration(DataMigration(1, System.currentTimeMillis()))
+          }
+          else {
+            Logger.warn("Bulk insert of professional bodies failed.")
+            Future.successful(false)
+          }
         }
-      } else Future.successful(false)
+      } else {
+        Logger.debug("Data migration already completed. Professional bodies present in Mongo.")
+        Future.successful(false)
+      }
     }
   }
 

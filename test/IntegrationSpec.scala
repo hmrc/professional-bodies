@@ -17,9 +17,10 @@
 import akka.stream.Materializer
 import models.ProfessionalBody
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import play.api.mvc.Result
@@ -30,7 +31,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
 
-class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures {
+class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures with Eventually with IntegrationPatience {
 
   implicit override lazy val app: Application = GuiceApplicationBuilder().configure(
     "auditing.enabled" -> false,
@@ -42,6 +43,13 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
   val repo: ProfessionalBodiesMongoRepository = app.injector.instanceOf[ProfessionalBodiesMongoRepository]
+
+  override protected def beforeAll(): Unit = {
+    repo.drop
+    eventually {
+      status(route(app, FakeRequest("GET", "/admin/health")).get) should be(Status.OK)
+    }
+  }
 
   override protected def afterAll(): Unit = repo.drop
 
@@ -65,7 +73,6 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
   "The App" should {
     "return the organisations as Json" in {
       val result = await(callEndPoint(GET))
-      Thread.sleep(10000)
       status(result) shouldBe OK
       sortedResult(result).size shouldBe DefaultProfessionalBodies.load.size
     }
