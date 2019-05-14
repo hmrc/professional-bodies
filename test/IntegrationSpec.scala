@@ -86,7 +86,6 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
       Thread.sleep(500)
 
       val inserted = repo.findAll().futureValue
-      println(inserted)
 
       inserted.size shouldBe 1
       inserted.head.name shouldBe name
@@ -103,10 +102,8 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
     "remove organisation from db" in {
       val professionalBody = contentAsJson(callEndPoint(GET)).as[JsArray].value.head
-      println(professionalBody)
 
       val professionalBodyName = (professionalBody \ "name").get
-      println(professionalBodyName)
 
       val res = await(callEndPoint(DELETE, professionalBody))
       status(res) shouldBe ACCEPTED
