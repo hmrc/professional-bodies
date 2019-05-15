@@ -7,7 +7,7 @@ This code is open source software licensed under the [Apache 2.0 License]("http:
 
 Start DataBase locally
 
-
+//hidden endpoint
 E.G. - for deleting a Professional Body
 curl \
     --header "Content-type: application/json" \
@@ -15,6 +15,7 @@ curl \
     --data '{"name":"professionalBody", "id":"validID"}' \
     http://localhost:7401/professionalBodies
 
+//hidden endpoint
 E.G. - for adding a Professional Body
 curl \
     --header "Content-type: application/json" \
