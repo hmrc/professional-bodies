@@ -16,7 +16,7 @@
 
 import akka.stream.Materializer
 import models.ProfessionalBody
-import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
+import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -27,11 +27,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.{DataMigrationMongoRepository, ProfessionalBodiesMongoRepository}
-import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures with Eventually with IntegrationPatience with SequentialNestedSuiteExecution {
+class IntegrationSpec extends WordSpec with GuiceOneAppPerSuite with BeforeAndAfterAll with ScalaFutures with Eventually with IntegrationPatience with SequentialNestedSuiteExecution with Matchers{
 
   implicit override lazy val app: Application = GuiceApplicationBuilder().configure(
     "auditing.enabled" -> false,
@@ -49,29 +48,30 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
     status(route(app, FakeRequest("GET", "/admin/health")).get) should be(Status.OK)
   }
 
-  def callEndPoint(method: String): Result = {
+  def callEndPoint(method: String): Future[Result] = {
     route(app, FakeRequest(method, "/professionalBodies")) match {
-      case Some(result) => await(result)
+      case Some(result) => result
       case _ => fail()
     }
   }
 
-  def callEndPoint(method: String, professionalBody: JsValue): Result = {
+  def callEndPoint(method: String, professionalBody: JsValue): Future[Result] = {
     route(app, FakeRequest(method, "/professionalBodies").withJsonBody(professionalBody)) match {
-      case Some(result) => await(result)
+      case Some(result) => result
       case _ => fail()
     }
   }
 
-  def sortedResult (result: Result): Seq[ProfessionalBody] = {
-    jsonBodyOf(result).as[JsArray].value.map(_.toString().replaceAll("\"","")).sorted.map(organisation => ProfessionalBody(organisation))
+  def sortedResult (result: Result) = {
+    //jsonBodyOf(result).as[JsArray].value.map(_.toString().replaceAll("\"","")).sorted.map(organisation => ProfessionalBody(          organisation))
+    result.body.asInstanceOf[JsValue].as[JsArray].value.map(_.toString()).sorted.map(org => ProfessionalBody(org))
   }
 
   "The App" should {
     "return the organisations as Json" in {
-      val result = await(callEndPoint(GET))
+      val result = callEndPoint(GET)
       status(result) shouldBe OK
-      sortedResult(result).size shouldBe DefaultProfessionalBodies.load.size
+      sortedResult(await(result)).size shouldBe DefaultProfessionalBodies.load.size
     }
 
     "add organisation to db" ignore {
@@ -106,11 +106,11 @@ class IntegrationSpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAf
 
       val professionalBodyName = (professionalBody \ "name").get
 
-      val res = await(callEndPoint(DELETE, professionalBody))
+      val res = callEndPoint(DELETE, professionalBody)
       status(res) shouldBe ACCEPTED
 
       val result = repo.find("name" -> JsString(professionalBodyName.as[String]))
-      result.isEmpty shouldBe true
+      result.value shouldBe None
     }
 
     // hack!! we use sequential nested suite execution and clean up here because Play Mongo has shutdown when "afterAll" is called

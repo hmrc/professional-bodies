@@ -18,24 +18,24 @@ package repositories
 
 import models.ProfessionalBody
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterAll, SequentialNestedSuiteExecution}
+import org.scalatest.{BeforeAndAfterAll, Matchers, SequentialNestedSuiteExecution, WordSpec}
 import play.api.libs.json.JsString
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.{UpdateWriteResult, WriteConcern, WriteResult}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class RepositorySpec
-  extends UnitSpec
+  extends WordSpec
     with BeforeAndAfterAll
     with MongoSpecSupport
     with SequentialNestedSuiteExecution
-    with ScalaFutures {
+    with ScalaFutures
+    with Matchers{
 
   val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
     override def mongoConnector: MongoConnector = mongoConnectorForTest
@@ -65,7 +65,7 @@ class RepositorySpec
     }
   }
 
-  override def afterAll(): Unit = new MongoScenario { await(repository.drop) }
+  override def afterAll(): Unit = new MongoScenario { repository.drop }
 //repository no longer inserts organisations
   "The repository" should {
 /*    "return All the organisation" in new MongoScenario {

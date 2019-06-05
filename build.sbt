@@ -23,7 +23,6 @@ libraryDependencies ++= Seq(
   "org.pegdown"             %  "pegdown"                  % "1.6.0"                 % "test",
   "uk.gov.hmrc"             %% "service-integration-test" % "0.2.0"                 % "test",
   "org.scalatestplus.play"  %% "scalatestplus-play"       % "2.0.0"                 % "test",
-  "uk.gov.hmrc"             %% "hmrctest"                 % "3.2.0"                 % "test",
   "org.mockito"             %  "mockito-core"             % "2.23.4"                % "test",
   "uk.gov.hmrc"             %% "reactivemongo-test"       % "4.8.0-play-25"         % "test"
 )
