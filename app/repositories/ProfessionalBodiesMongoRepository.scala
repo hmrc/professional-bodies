@@ -41,7 +41,6 @@ class ProfessionalBodiesMongoRepository @Inject()(mongo: ReactiveMongoComponent,
   extends ReactiveRepository[MongoProfessionalBody, BSONObjectID]("professionalBodies", mongo.mongoConnector.db, MongoProfessionalBody.formatMongoOrganisation, objectIdFormats)
     with ProfessionalBodiesRepository {
 
-  //TODO write tests
   def insertProfessionalBodies(professionalBodies: Seq[MongoProfessionalBody]): Future[Boolean] = bulkInsert(professionalBodies).map { res =>
     if (!res.ok) {
       throw new IllegalStateException("Write to repository unsuccessful")
